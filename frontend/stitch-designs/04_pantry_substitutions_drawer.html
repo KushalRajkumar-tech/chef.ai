@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Chef.ai Pantry Manager</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-fixed-dim": "#fbbc00",
+                    "on-error": "#690005",
+                    "on-tertiary-fixed-variant": "#474746",
+                    "tertiary-container": "#cbc9c8",
+                    "surface-container-low": "#1c1b1b",
+                    "primary-fixed": "#ffdfa0",
+                    "surface": "#131313",
+                    "primary-container": "#ffbf00",
+                    "tertiary-fixed-dim": "#c8c6c5",
+                    "on-primary-fixed-variant": "#5c4300",
+                    "secondary-fixed": "#e4e4cc",
+                    "secondary-container": "#494a38",
+                    "on-tertiary-container": "#555454",
+                    "outline": "#9c8f78",
+                    "on-primary": "#402d00",
+                    "secondary": "#c8c8b0",
+                    "on-surface": "#e5e2e1",
+                    "tertiary": "#e8e5e4",
+                    "on-background": "#e5e2e1",
+                    "on-secondary-fixed-variant": "#474836",
+                    "on-secondary-container": "#b9baa3",
+                    "surface-container-high": "#2a2a2a",
+                    "primary": "#ffe2ab",
+                    "on-surface-variant": "#d4c5ab",
+                    "surface-dim": "#131313",
+                    "outline-variant": "#504532",
+                    "on-primary-container": "#6d5000",
+                    "inverse-on-surface": "#313030",
+                    "on-tertiary": "#303030",
+                    "on-error-container": "#ffdad6",
+                    "surface-container-lowest": "#0e0e0e",
+                    "surface-container-highest": "#353534",
+                    "surface-bright": "#393939",
+                    "secondary-fixed-dim": "#c8c8b0",
+                    "inverse-primary": "#795900",
+                    "on-secondary": "#303221",
+                    "tertiary-fixed": "#e5e2e1",
+                    "surface-container": "#201f1f",
+                    "surface-tint": "#fbbc00",
+                    "background": "#131313",
+                    "surface-variant": "#353534",
+                    "on-tertiary-fixed": "#1b1b1c",
+                    "on-secondary-fixed": "#1b1d0e",
+                    "inverse-surface": "#e5e2e1",
+                    "error-container": "#93000a",
+                    "on-primary-fixed": "#261a00",
+                    "error": "#ffb4ab"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "2xl": "1.5rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "stack-lg": "48px",
+                    "base": "8px",
+                    "stack-sm": "12px",
+                    "gutter": "16px",
+                    "container-padding": "24px",
+                    "stack-md": "24px"
+            },
+            "fontFamily": {
+                    "headline-md": [
+                            "Montserrat"
+                    ],
+                    "headline-lg-mobile": [
+                            "Montserrat"
+                    ],
+                    "body-md": [
+                            "Inter"
+                    ],
+                    "label-sm": [
+                            "Inter"
+                    ],
+                    "headline-xl": [
+                            "Montserrat"
+                    ],
+                    "headline-lg": [
+                            "Montserrat"
+                    ],
+                    "body-lg": [
+                            "Inter"
+                    ],
+                    "label-md": [
+                            "Inter"
+                    ]
+            },
+            "fontSize": {
+                    "headline-md": [
+                            "24px",
+                            {
+                                    "lineHeight": "32px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "headline-lg-mobile": [
+                            "28px",
+                            {
+                                    "lineHeight": "34px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "body-md": [
+                            "16px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "label-sm": [
+                            "12px",
+                            {
+                                    "lineHeight": "16px",
+                                    "letterSpacing": "0.05em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "headline-xl": [
+                            "48px",
+                            {
+                                    "lineHeight": "56px",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "headline-lg": [
+                            "32px",
+                            {
+                                    "lineHeight": "40px",
+                                    "letterSpacing": "-0.01em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "body-lg": [
+                            "18px",
+                            {
+                                    "lineHeight": "28px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "label-md": [
+                            "14px",
+                            {
+                                    "lineHeight": "20px",
+                                    "letterSpacing": "0.01em",
+                                    "fontWeight": "500"
+                            }
+                    ]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(32, 31, 31, 0.85);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+        }
+        
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md h-screen w-full overflow-hidden relative selection:bg-primary-container selection:text-on-primary-container">
+<!-- Background Pantry View (Dimmed) -->
+<div class="absolute inset-0 z-0">
+<div class="bg-cover bg-center w-full h-full opacity-30" data-alt="A softly lit, high-end culinary pantry scene in a dark, atmospheric kitchen. Shelves filled with premium ingredients, spices in uniform jars, and fresh produce subtly illuminated. Dark charcoal tones with warm amber highlights bouncing off glass containers. High resolution, professional food photography style." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDOv-RAlThdms3oif950LRe9FBS3VTA8Ia61EyoAtmKctH3o3DOpEj1uiGCJMNhbxUUYokrxj3WsLDRYVqKI4IfKUPfECaEQXtdUqLjkyRF2P6K1qbY29UfjJsRCjkTYklWNVvA7c5y0UxsJEKfftgSSXLt6iTQLcS6shiYC4dqSIBPN5nND1nYZjchuuRZ7XJyjujeaZWC6by74bls0mfGK3YbOCgXdznBfg_s_ZfT6FENPsA_4taPVgSlkmsy7Qe-039kDwQvmSY')"></div>
+<div class="absolute inset-0 bg-background/60"></div>
+</div>
+<!-- Top Nav Shell (Hidden on Mobile) -->
+<header class="hidden md:flex justify-between items-center h-16 px-gutter max-w-7xl mx-auto fixed top-0 w-full z-10 bg-surface/80 backdrop-blur-md border-b border-secondary/10 shadow-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary font-bold" data-icon="cooking" data-weight="fill">cooking</span>
+<span class="font-headline-md text-headline-md font-bold text-primary">Chef.ai</span>
+</div>
+</header>
+<!-- Bottom Sheet Overlay -->
+<div class="absolute inset-x-0 bottom-0 z-40 transform transition-transform duration-300 ease-out h-[795px] md:h-[751px] max-w-4xl mx-auto shadow-[0_-8px_40px_rgba(0,0,0,0.5)]">
+<div class="glass-panel w-full h-full rounded-t-[1.5rem] flex flex-col border border-secondary/10 border-b-0 overflow-hidden relative">
+<!-- Header Handle -->
+<div class="w-full flex justify-center pt-4 pb-2 shrink-0 cursor-grab active:cursor-grabbing">
+<div class="w-12 h-1.5 bg-on-surface-variant/30 rounded-full"></div>
+</div>
+<!-- Scrollable Content -->
+<div class="flex-1 overflow-y-auto px-gutter md:px-container-padding pb-32 hide-scrollbar">
+<!-- Title & Badge -->
+<div class="flex justify-between items-center mb-stack-md pt-2">
+<h1 class="font-headline-md text-headline-md md:font-headline-lg md:text-headline-lg text-on-surface">Pantry Manager &amp; AI Substitutions</h1>
+<span class="bg-surface-container-highest text-primary font-label-sm text-label-sm px-3 py-1 rounded-full border border-secondary/10 shadow-sm">
+                        14 Items Tracked
+                    </span>
+</div>
+<!-- Expiry Alerts Horizontal Scroll -->
+<div class="flex gap-3 overflow-x-auto pb-4 hide-scrollbar mb-stack-md snap-x">
+<!-- Alert Chip (Expired) -->
+<div class="snap-start shrink-0 flex items-center gap-2 bg-error-container/20 border border-error/30 text-error px-4 py-2 rounded-full shadow-sm">
+<span class="material-symbols-outlined text-[18px]" data-icon="warning">warning</span>
+<span class="font-label-md text-label-md">Heavy Cream - Expired Yesterday</span>
+</div>
+<!-- Warning Chip (Expiring Soon) -->
+<div class="snap-start shrink-0 flex items-center gap-2 bg-primary-container/20 border border-primary/30 text-primary px-4 py-2 rounded-full shadow-sm">
+<span class="material-symbols-outlined text-[18px]" data-icon="error">error</span>
+<span class="font-label-md text-label-md">Greek Yogurt - 1 Day Left</span>
+</div>
+<!-- Info Chip (Neutral) -->
+<div class="snap-start shrink-0 flex items-center gap-2 bg-surface-container-high border border-outline-variant/30 text-on-surface-variant px-4 py-2 rounded-full shadow-sm">
+<span class="material-symbols-outlined text-[18px]" data-icon="info">info</span>
+<span class="font-label-md text-label-md">Spinach - 3 Days Left</span>
+</div>
+</div>
+<!-- AI Substitution Card (Bento Style) -->
+<div class="bg-surface-container-low rounded-xl p-6 border border-primary/20 mb-stack-lg shadow-sm relative overflow-hidden group">
+<div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+<div class="flex items-center gap-3 mb-4">
+<div class="p-2 bg-primary-container rounded-lg text-on-primary-container shadow-sm">
+<span class="material-symbols-outlined" data-icon="auto_awesome">auto_awesome</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-primary">AI Smart Substitutes</h2>
+</div>
+<div class="space-y-4 mb-6">
+<!-- Swap Option 1 -->
+<div class="flex items-start gap-3 p-4 bg-surface rounded-lg border border-secondary/5">
+<span class="material-symbols-outlined text-error mt-0.5" data-icon="block">block</span>
+<div>
+<p class="font-label-md text-label-md text-on-surface font-medium mb-1">Missing Greek Yogurt?</p>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-primary" data-icon="arrow_forward">arrow_forward</span>
+                                    Swap with Plain Curd (1:1) or Coconut Cream
+                                </p>
+</div>
+</div>
+<!-- Swap Option 2 -->
+<div class="flex items-start gap-3 p-4 bg-surface rounded-lg border border-secondary/5">
+<span class="material-symbols-outlined text-error mt-0.5" data-icon="block">block</span>
+<div>
+<p class="font-label-md text-label-md text-on-surface font-medium mb-1">Missing Heavy Cream?</p>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-primary" data-icon="arrow_forward">arrow_forward</span>
+                                    Swap with Milk + Melted Butter (1:1 ratio)
+                                </p>
+</div>
+</div>
+</div>
+<button class="w-full sm:w-auto bg-primary-container hover:bg-primary-fixed text-on-primary-container font-label-md text-label-md font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 shadow-sm">
+<span class="material-symbols-outlined" data-icon="check_circle">check_circle</span>
+                        Apply Substitutions
+                    </button>
+</div>
+<!-- Inventory Section -->
+<div class="mb-stack-md">
+<h3 class="font-headline-md text-[20px] leading-[28px] font-semibold text-on-surface mb-4">Inventory</h3>
+<!-- Filter Tabs -->
+<div class="flex gap-2 overflow-x-auto pb-4 hide-scrollbar border-b border-surface-variant">
+<button class="shrink-0 px-4 py-2 border-b-2 border-primary text-primary font-label-md text-label-md transition-colors">All</button>
+<button class="shrink-0 px-4 py-2 border-b-2 border-transparent text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-colors">Dairy &amp; Eggs</button>
+<button class="shrink-0 px-4 py-2 border-b-2 border-transparent text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-colors">Produce</button>
+<button class="shrink-0 px-4 py-2 border-b-2 border-transparent text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-colors">Spices &amp; Oils</button>
+</div>
+<!-- Item List -->
+<div class="mt-4 space-y-3">
+<!-- Item Row 1 -->
+<div class="flex items-center justify-between p-3 bg-surface-container-low rounded-xl border border-secondary/5 hover:border-secondary/10 transition-colors group">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-surface rounded-lg overflow-hidden border border-outline-variant/30 flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Close up overhead shot of half a dozen fresh brown eggs in a dark culinary setting, studio lighting highlighting texture, charcoal background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAiUQ_3e7KY9HXSHTtykq1vxuA_rUhlo0KozW58mUN2XPPrc9VzXgSBfpcdLV9Plr8SVmSzwirvqiUHREL9fgHUnsttZVCsuPiRwnQ7al0WM-hj3bws5ZoMo2rlfgfWxWPqXjKHy6J57KGgC1k59mlIPJOmwbZ8Dk2BW6lZexP1m-rP9TpXSf6NssXKlU89dUF45XbQeaQW1QoXDlFN4Xi_T-Q3gS_MT7JcjuDZirGQOPmmLGerBbKGy7S7PUoAajn9q2BzwhPVzes"/>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface font-medium">Large Eggs</p>
+<p class="font-body-md text-[14px] leading-[20px] text-on-surface-variant">6 items</p>
+</div>
+</div>
+<div class="flex flex-col items-end gap-2">
+<button class="text-primary hover:text-primary-fixed text-sm font-label-md text-label-md transition-colors hidden sm:block">Find Recipes</button>
+<!-- Freshness Indicator -->
+<div class="flex items-center gap-2">
+<span class="text-xs text-on-surface-variant">Fresh</span>
+<div class="w-16 h-1.5 bg-surface-variant rounded-full overflow-hidden">
+<div class="w-3/4 h-full bg-primary rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Item Row 2 (Expiring Soon) -->
+<div class="flex items-center justify-between p-3 bg-surface-container-low rounded-xl border border-secondary/5 hover:border-secondary/10 transition-colors group">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-surface rounded-lg overflow-hidden border border-outline-variant/30 flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Small glass jar of creamy greek yogurt set against a dark moody kitchen counter, amber spotlighting, professional culinary photography" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB1CjNX1RtGFAnoL1ka_hdi8XFHGWt-MHyfs-AubMqIdqiCb-wMftVm0YPQBxPg-kbyE_rYqknn7um_ZpRyF2NaSY3MDSPuoJ9Tao8TGGBvkiyXI1dhbrgK-UYNt4TrZKB73JHnE2j0ocTLU4aDW8rgA5IrhEuimU2lGiAfOfJ80HltBgivyRkJddav2WxFXxUE90fryQ1YcmRJl1p1t4bw3H6dJKhRR6sIUhtwG5p4xqXMlH9tE2PuVnfahRTEm38ur7Z09ojmmow"/>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface font-medium">Greek Yogurt</p>
+<p class="font-body-md text-[14px] leading-[20px] text-on-surface-variant">1 tub (500g)</p>
+</div>
+</div>
+<div class="flex flex-col items-end gap-2">
+<button class="text-primary hover:text-primary-fixed text-sm font-label-md text-label-md transition-colors hidden sm:block">Find Recipes</button>
+<!-- Freshness Indicator -->
+<div class="flex items-center gap-2">
+<span class="text-xs text-primary">1 Day</span>
+<div class="w-16 h-1.5 bg-surface-variant rounded-full overflow-hidden">
+<div class="w-1/4 h-full bg-primary rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Item Row 3 -->
+<div class="flex items-center justify-between p-3 bg-surface-container-low rounded-xl border border-secondary/5 hover:border-secondary/10 transition-colors group">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-surface rounded-lg overflow-hidden border border-outline-variant/30 flex-shrink-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="eco">eco</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface font-medium">Fresh Spinach</p>
+<p class="font-body-md text-[14px] leading-[20px] text-on-surface-variant">1 bag</p>
+</div>
+</div>
+<div class="flex flex-col items-end gap-2">
+<button class="text-primary hover:text-primary-fixed text-sm font-label-md text-label-md transition-colors hidden sm:block">Find Recipes</button>
+<!-- Freshness Indicator -->
+<div class="flex items-center gap-2">
+<span class="text-xs text-on-surface-variant">3 Days</span>
+<div class="w-16 h-1.5 bg-surface-variant rounded-full overflow-hidden">
+<div class="w-1/2 h-full bg-secondary rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Action Bar (Docked inside sheet) -->
+<div class="absolute bottom-0 left-0 w-full bg-surface-container/95 backdrop-blur-md p-4 border-t border-secondary/10 shadow-[0_-4px_20px_rgba(0,0,0,0.2)]">
+<div class="max-w-md mx-auto flex gap-3">
+<button class="flex-1 bg-surface-container-highest hover:bg-surface-bright border border-outline-variant/50 text-on-surface font-label-md text-label-md py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors">
+<span class="material-symbols-outlined" data-icon="barcode_scanner">barcode_scanner</span>
+                        Scan Barcode
+                    </button>
+<button class="flex-1 bg-surface-container-highest hover:bg-surface-bright border border-outline-variant/50 text-on-surface font-label-md text-label-md py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+                        Custom Item
+                    </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Nav Bar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center px-4 py-3 pb-safe bg-surface-container dark:bg-surface-container shadow-[0_-4px_40px_rgba(0,0,0,0.25)] rounded-t-xl z-50">
+<button class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:text-primary transition-all active:scale-90 duration-200">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-sm text-label-sm mt-1">Home</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:text-primary transition-all active:scale-90 duration-200">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+<span class="font-label-sm text-label-sm mt-1">Discovery</span>
+</button>
+<!-- Active Tab: Pantry -->
+<button class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 active:scale-90 transition-transform duration-200">
+<span class="material-symbols-outlined font-bold" data-icon="inventory_2" data-weight="fill">inventory_2</span>
+<span class="font-label-sm text-label-sm font-bold mt-1">Pantry</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:text-primary transition-all active:scale-90 duration-200">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-sm text-label-sm mt-1">Settings</span>
+</button>
+</nav>
+</body></html>
