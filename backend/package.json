@@ -1,0 +1,21 @@
+{
+  "name": "chef-ai-backend",
+  "version": "1.0.0",
+  "description": "Chef.ai Dual-Mode AI & Mock Backend Service",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node test_backend.js"
+  },
+  "keywords": ["chef-ai", "express", "gemini", "culinary-ai"],
+  "author": "Chef.ai Team",
+  "license": "ISC",
+  "dependencies": {
+    "@google/genai": "latest",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
+  }
+}
