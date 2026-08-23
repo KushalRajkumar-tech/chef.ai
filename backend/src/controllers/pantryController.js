@@ -17,6 +17,7 @@ export async function scanPantry(req, res, next) {
         data: {
           source: 'pantry_inventory',
           items: MOCK_PANTRY_ITEMS,
+          detectedIngredients: MOCK_PANTRY_ITEMS.map(i => i.name),
           totalCount: MOCK_PANTRY_ITEMS.length,
           expiringSoonCount: MOCK_PANTRY_ITEMS.filter(i => i.freshness === 'expiring_soon' || i.freshness === 'expired').length
         }

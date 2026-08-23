@@ -6,7 +6,8 @@ import SubstitutionDrawer from './components/SubstitutionDrawer';
 import { api } from './services/api';
 
 export default function App() {
-  const [ingredients, setIngredients] = useState(['Eggs', 'Tomatoes', 'Garlic', 'Olive Oil', 'Parmesan']);
+  const [ingredients, setIngredients] = useState(['Chicken Breast', 'Rice', 'Broccoli', 'Garlic', 'Olive Oil']);
+  const [pantryItems, setPantryItems] = useState([]);
   const [recipes, setRecipes] = useState([]);
   const [activeTab, setActiveTab] = useState('hub'); // 'hub' | 'feed'
   const [activeFilter, setActiveFilter] = useState('all');
@@ -18,21 +19,39 @@ export default function App() {
   const [isScanning, setIsScanning] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [backendMode, setBackendMode] = useState('connecting');
+  const [toast, setToast] = useState(null);
+
+  const showToast = (message, type = 'info') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3500);
+  };
 
   useEffect(() => {
     async function init() {
-      const health = await api.checkHealth();
-      setBackendMode(health.mode || 'offline');
-      fetchInitialRecipes(ingredients);
+      try {
+        const health = await api.checkHealth();
+        setBackendMode(health.mode || 'offline');
+        
+        // Initial recipes for the default ingredients
+        fetchInitialRecipes(ingredients, 'all');
+
+        // Sync pantry inventory
+        const pantryRes = await api.scanPantry();
+        if (pantryRes && pantryRes.items) {
+          setPantryItems(pantryRes.items);
+        }
+      } catch (err) {
+        console.warn('Init error:', err);
+      }
     }
     init();
   }, []);
 
-  const fetchInitialRecipes = async (ingList) => {
+  const fetchInitialRecipes = async (ingList, filter = activeFilter, searchQuery = '') => {
     setIsGenerating(true);
     try {
-      const res = await api.generateRecipes(ingList);
-      if (res && res.recipes) {
+      const res = await api.generateRecipes(ingList, filter, 'Best Match', searchQuery);
+      if (res && res.recipes && res.recipes.length > 0) {
         setRecipes(res.recipes);
       }
     } catch (err) {
@@ -43,33 +62,61 @@ export default function App() {
   };
 
   const handleAddIngredient = (item) => {
-    if (!ingredients.includes(item)) {
-      const updated = [...ingredients, item];
+    const trimmed = item.trim();
+    if (!ingredients.some((i) => i.toLowerCase() === trimmed.toLowerCase())) {
+      const updated = [...ingredients, trimmed];
       setIngredients(updated);
+      showToast(`Added "${trimmed}"! Updating recipes...`, 'success');
+      // Automatically refresh recipes for new ingredient
+      fetchInitialRecipes(updated, activeFilter);
     }
   };
 
   const handleRemoveIngredient = (item) => {
-    setIngredients(ingredients.filter((i) => i !== item));
+    const updated = ingredients.filter((i) => i.toLowerCase() !== item.toLowerCase());
+    setIngredients(updated);
+    showToast(`Removed "${item}"`, 'info');
+    fetchInitialRecipes(updated, activeFilter);
   };
 
-  const handleScanPantry = async () => {
+  const handleImageScan = async (file) => {
     setIsScanning(true);
+    showToast('Analyzing food photo with AI Vision...', 'info');
     try {
-      const res = await api.scanPantry('Simulated Pantry Camera Scan');
-      if (res && res.detectedIngredients) {
-        setIngredients((prev) => Array.from(new Set([...prev, ...res.detectedIngredients])));
+      const res = await api.scanPantryWithImage(file);
+      if (res && res.detectedIngredients && res.detectedIngredients.length > 0) {
+        const merged = Array.from(new Set([...ingredients, ...res.detectedIngredients]));
+        setIngredients(merged);
+        if (res.items) setPantryItems(res.items);
+        showToast(`AI detected ${res.detectedIngredients.length} ingredients!`, 'success');
+        fetchInitialRecipes(merged, activeFilter);
+      } else {
+        showToast('No new ingredients recognized in photo', 'warning');
       }
     } catch (err) {
       console.error('Scan error:', err);
+      showToast('Photo scan failed. Using offline inventory.', 'warning');
     } finally {
       setIsScanning(false);
     }
   };
 
-  const handleGenerateRecipes = () => {
-    fetchInitialRecipes(ingredients);
+  const handleGenerateRecipes = async () => {
+    showToast(`Chef.ai is creating recipes with your ${ingredients.length} ingredients!`, 'success');
+    await fetchInitialRecipes(ingredients, activeFilter);
     setActiveTab('feed');
+  };
+
+  const handleSelectFilter = (filter) => {
+    setActiveFilter(filter);
+    fetchInitialRecipes(ingredients, filter);
+  };
+
+  const handleSearchAI = async (query) => {
+    showToast(`Chef.ai is crafting a recipe for "${query}"...`, 'info');
+    await fetchInitialRecipes(ingredients, activeFilter, query);
+    setActiveTab('feed');
+    showToast(`Created custom dishes for "${query}"!`, 'success');
   };
 
   const handleOpenSubstituteDrawer = (ingredientName) => {
@@ -79,10 +126,17 @@ export default function App() {
 
   const handleApplySwap = (original, substitute) => {
     if (!selectedRecipe) return;
+
     const updatedIngredients = selectedRecipe.ingredients?.map((ing) => {
       const name = typeof ing === 'string' ? ing : ing.name;
       if (name.toLowerCase().includes(original.toLowerCase())) {
-        return { name: `${substitute} (Swapped from ${original})`, available: true };
+        return {
+          ...ing,
+          name: `${substitute} (Replaced ${original})`,
+          inPantry: true,
+          isMissing: false,
+          available: true,
+        };
       }
       return ing;
     });
@@ -91,25 +145,56 @@ export default function App() {
       (m) => !m.toLowerCase().includes(original.toLowerCase())
     );
 
-    setSelectedRecipe({
+    const newRecipe = {
       ...selectedRecipe,
       ingredients: updatedIngredients,
       missingIngredients: updatedMissing,
-    });
+      pantryMatchPercentage: 100,
+      isAllAvailable: (updatedMissing || []).length === 0,
+    };
+
+    setSelectedRecipe(newRecipe);
+
+    // Update in main feed list as well
+    setRecipes((prev) =>
+      prev.map((r) => (r.id === newRecipe.id ? newRecipe : r))
+    );
+
+    showToast(`Swapped "${original}" with "${substitute}"!`, 'success');
   };
 
   return (
-    <div className="bg-background text-on-background font-body-md min-h-screen flex flex-col pt-16 pb-[88px] md:pb-0">
-      {/* TopAppBar from Stitch JSON */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-surface/80 dark:bg-surface/80 backdrop-blur-md border-b border-secondary/10 shadow-sm flex justify-between items-center h-16 px-gutter max-w-7xl mx-auto">
+    <div className="bg-background text-on-background min-h-screen flex flex-col pt-16 pb-[88px] md:pb-0">
+      
+      {/* Toast Notification */}
+      {toast && (
+        <div className="fixed top-20 right-4 z-50 animate-in slide-in-from-top duration-300">
+          <div className={`px-4 py-2.5 rounded-xl shadow-xl border text-sm font-semibold flex items-center gap-2 backdrop-blur-md ${
+            toast.type === 'success' 
+              ? 'bg-green-950/90 text-green-300 border-green-700/50' 
+              : toast.type === 'warning'
+              ? 'bg-amber-950/90 text-amber-300 border-amber-700/50'
+              : 'bg-surface-container-high/90 text-on-surface border-primary/30'
+          }`}>
+            <span className="material-symbols-outlined text-base">
+              {toast.type === 'success' ? 'check_circle' : toast.type === 'warning' ? 'warning' : 'info'}
+            </span>
+            {toast.message}
+          </div>
+        </div>
+      )}
+
+      {/* Top Navigation Bar */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-[#131313]/90 backdrop-blur-md border-b border-secondary/10 shadow-md flex justify-between items-center h-16 px-6 max-w-7xl mx-auto">
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab('hub')}>
-          <img
-            alt="Chef.ai Logo"
-            className="h-8 w-8 object-contain"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuAGGS7fY_LdaaG52oA99rnd_YjgEMLqkFn4PvTg0NiZ_4RFHA6p4bk_FhEBbSQ57mApZtcmYIiOyOIV57ymRwfIlA7je07pxwPXdKGBAaqInGrz-vll67iFt9dqZ6sBe6asLM4M7kIxeRh5ZM0AikK7nOpcVhwHDBhmSXGPiva8v_oPpXBhIpmf5VsZd9ybnyMkPEwuRLOq49BFJbSy2VsyD8XWJ2EtuemwSSbGEuPKTCuq2u2_xWLY1PdZDezZTQZMame2Ke1_ApM"
-          />
-          <span className="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">
+          <div className="w-9 h-9 rounded-xl bg-primary-container flex items-center justify-center text-black shadow-md">
+            <span className="material-symbols-outlined text-2xl font-bold">restaurant</span>
+          </div>
+          <span className="font-headline-md text-xl font-bold text-primary">
             Chef.ai
+          </span>
+          <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-surface-container text-on-surface-variant border border-outline/20">
+            {backendMode === 'live' ? '⚡ Live AI' : '🍲 Culinary Engine'}
           </span>
         </div>
 
@@ -117,13 +202,13 @@ export default function App() {
         <nav className="hidden md:flex items-center gap-8">
           <button
             onClick={() => setActiveTab('hub')}
-            className={`font-label-md text-label-md transition-colors flex items-center gap-2 py-4 ${
+            className={`font-label-md text-sm transition-all flex items-center gap-2 py-5 cursor-pointer ${
               activeTab === 'hub'
-                ? 'text-primary border-b-2 border-primary font-semibold'
+                ? 'text-primary border-b-2 border-primary font-bold'
                 : 'text-on-surface-variant hover:text-primary'
             }`}
           >
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: activeTab === 'hub' ? "'FILL' 1" : "'FILL' 0" }}>
+            <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: activeTab === 'hub' ? "'FILL' 1" : "'FILL' 0" }}>
               inventory_2
             </span>
             Hub &amp; Pantry
@@ -131,70 +216,62 @@ export default function App() {
 
           <button
             onClick={() => setActiveTab('feed')}
-            className={`font-label-md text-label-md transition-colors flex items-center gap-2 py-4 ${
+            className={`font-label-md text-sm transition-all flex items-center gap-2 py-5 cursor-pointer ${
               activeTab === 'feed'
-                ? 'text-primary border-b-2 border-primary font-semibold'
+                ? 'text-primary border-b-2 border-primary font-bold'
                 : 'text-on-surface-variant hover:text-primary'
             }`}
           >
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: activeTab === 'feed' ? "'FILL' 1" : "'FILL' 0" }}>
+            <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: activeTab === 'feed' ? "'FILL' 1" : "'FILL' 0" }}>
               explore
             </span>
-            Discover
+            Discover Recipes
           </button>
         </nav>
 
-        <div className="flex items-center gap-4">
+        {/* Header Right Actions */}
+        <div className="flex items-center gap-3">
           <button
-            onClick={handleScanPantry}
-            className="bg-primary-container text-on-primary-container px-4 py-2 rounded-full font-label-sm text-label-sm shadow-[0_0_20px_rgba(255,191,0,0.15)] active:scale-95 duration-200 transition-transform flex items-center gap-2"
-          >
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1", fontSize: '16px' }}>
-              barcode_scanner
-            </span>
-            {isScanning ? 'Scanning...' : 'Scan Pantry'}
-          </button>
-          
-          <div
             onClick={() => setIsDrawerOpen(true)}
-            className="w-8 h-8 rounded-full overflow-hidden bg-surface-container-high border border-outline/20 cursor-pointer hover:border-primary transition-colors"
-            title="Open AI Substitutions Drawer"
+            className="bg-surface-container hover:bg-surface-container-high text-primary px-3.5 py-1.5 rounded-full font-label-sm text-xs font-semibold border border-primary/30 flex items-center gap-1.5 transition-all cursor-pointer"
+            title="Open Pantry Inventory & AI Substitutions"
           >
-            <img
-              className="w-full h-full object-cover"
-              alt="User profile"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBpCbgE35yrcsUKbNcpWdCmLzg7tOtcR8o0iUtlgg0wSpHr66Sro7muwdP-C0xzAEzSYwPiaFWQWGJQ4r1rn_ZDsUhqegRHV6FHghNT1zBL3wre6TkRcQ5CRb6wqkS9gmJYD6VV8c4LSQ1DTD8t4RYUCRkTkTlaFC14D0U3wI45JlRHduaI54GrGdHNboXukmtCsNFR79wHVG7VbMyCzsMEjAu8Vu_0sdkwIRb6MYv1PQr5JeF1Y0Cdp0tEHjHgn9C5btl719D07mk"
-            />
-          </div>
+            <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>
+              swap_horiz
+            </span>
+            AI Swaps
+          </button>
         </div>
       </header>
 
-      {/* Main Canvas */}
-      <main className="flex-1 w-full max-w-7xl mx-auto px-gutter py-stack-md flex flex-col gap-stack-md">
+      {/* Main Content Area */}
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 py-6 flex flex-col gap-6">
         {activeTab === 'hub' ? (
           <PantryScanner
             ingredients={ingredients}
+            pantryItems={pantryItems}
             onAddIngredient={handleAddIngredient}
             onRemoveIngredient={handleRemoveIngredient}
-            onScanClick={handleScanPantry}
+            onImageScan={handleImageScan}
             onGenerateRecipes={handleGenerateRecipes}
+            onSearchDish={handleSearchAI}
             isScanning={isScanning}
             isGenerating={isGenerating}
             activeFilter={activeFilter}
-            onSelectFilter={(f) => {
-              setActiveFilter(f);
-              setActiveTab('feed');
-            }}
+            onSelectFilter={handleSelectFilter}
           />
         ) : (
           <RecipeFeed
             recipes={recipes}
             onSelectRecipe={(recipe) => setSelectedRecipe(recipe)}
+            onBackToHub={() => setActiveTab('hub')}
+            onSearchAI={handleSearchAI}
+            isGenerating={isGenerating}
           />
         )}
       </main>
 
-      {/* Cook-Along Modal */}
+      {/* Cook-Along Detail Modal */}
       {selectedRecipe && (
         <RecipeModal
           recipe={selectedRecipe}
@@ -203,48 +280,50 @@ export default function App() {
         />
       )}
 
-      {/* AI Substitutions Bottom Drawer */}
+      {/* AI Substitutions & Pantry Manager Drawer */}
       <SubstitutionDrawer
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
         missingIngredient={missingIngredientForSwap}
+        pantryItems={pantryItems}
         onApplySwap={handleApplySwap}
+        onAddIngredient={handleAddIngredient}
       />
 
-      {/* BottomNavBar from Stitch JSON */}
-      <nav className="md:hidden fixed bottom-0 w-full z-50 rounded-t-xl bg-surface-container dark:bg-surface-container shadow-[0_-4px_40px_rgba(0,0,0,0.25)] flex justify-around items-center px-4 py-3 pb-safe">
+      {/* Mobile Bottom Navigation Bar */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#131313]/95 backdrop-blur-md border-t border-secondary/10 flex justify-around items-center px-4 py-2.5">
         <button
           onClick={() => setActiveTab('hub')}
-          className={`flex flex-col items-center justify-center p-2 transition-all active:scale-90 ${
+          className={`flex flex-col items-center justify-center p-1.5 transition-all ${
             activeTab === 'hub' ? 'text-primary font-bold' : 'text-on-surface-variant hover:text-primary'
           }`}
         >
-          <span className="material-symbols-outlined" style={{ fontVariationSettings: activeTab === 'hub' ? "'FILL' 1" : "'FILL' 0" }}>
+          <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: activeTab === 'hub' ? "'FILL' 1" : "'FILL' 0" }}>
             home
           </span>
-          <span className="font-label-sm text-label-sm mt-1">Home</span>
+          <span className="text-[11px] mt-0.5">Hub</span>
         </button>
 
         <button
           onClick={() => setActiveTab('feed')}
-          className={`flex flex-col items-center justify-center p-2 transition-all active:scale-90 ${
+          className={`flex flex-col items-center justify-center p-1.5 transition-all ${
             activeTab === 'feed' ? 'text-primary font-bold' : 'text-on-surface-variant hover:text-primary'
           }`}
         >
-          <span className="material-symbols-outlined" style={{ fontVariationSettings: activeTab === 'feed' ? "'FILL' 1" : "'FILL' 0" }}>
-            search
+          <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: activeTab === 'feed' ? "'FILL' 1" : "'FILL' 0" }}>
+            explore
           </span>
-          <span className="font-label-sm text-label-sm mt-1">Discovery</span>
+          <span className="text-[11px] mt-0.5">Discover</span>
         </button>
 
         <button
           onClick={() => setIsDrawerOpen(true)}
-          className="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 active:scale-90 transition-transform shadow-[0_0_15px_rgba(255,191,0,0.2)]"
+          className="flex flex-col items-center justify-center p-1.5 text-on-surface-variant hover:text-primary transition-all"
         >
-          <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
+          <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: isDrawerOpen ? "'FILL' 1" : "'FILL' 0" }}>
             inventory_2
           </span>
-          <span className="font-label-sm text-label-sm mt-1">Pantry</span>
+          <span className="text-[11px] mt-0.5">Pantry</span>
         </button>
       </nav>
     </div>

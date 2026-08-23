@@ -1,7 +1,7 @@
 const API_BASE_URL = '/api';
 
 /**
- * Fetch wrapper with error handling and fallback logic.
+ * Robust fetch wrapper with error handling and fallback logic.
  */
 async function fetchApi(endpoint, options = {}) {
   try {
@@ -25,117 +25,134 @@ async function fetchApi(endpoint, options = {}) {
   }
 }
 
+/**
+ * Helper to convert a File object to base64 string
+ */
+export function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = (error) => reject(error);
+    reader.readAsDataURL(file);
+  });
+}
+
 export const api = {
   // Check Backend Health & Mode
   async checkHealth() {
     try {
-      return await fetchApi('/health');
+      const res = await fetchApi('/health');
+      return res;
     } catch {
-      return { status: 'offline', mode: 'mock-frontend', service: 'Chef.ai Standalone' };
+      return { status: 'offline', mode: 'mock-offline', service: 'Chef.ai Standalone' };
     }
   },
 
-  // Scan Pantry (Image or Text)
-  async scanPantry(payload) {
+  // Scan Pantry (Image or general pantry sync)
+  async scanPantry(payload = {}) {
     try {
-      return await fetchApi('/pantry/scan', {
+      const res = await fetchApi('/pantry/scan', {
         method: 'POST',
-        body: JSON.stringify(typeof payload === 'string' ? { text: payload } : payload),
+        body: JSON.stringify(payload),
       });
-    } catch {
-      // Fallback response if offline
+
+      const data = res.data || {};
       return {
         success: true,
+        source: data.source || 'backend',
+        items: data.items || [],
+        detectedIngredients: data.detectedIngredients || (data.items ? data.items.map(i => i.name) : []),
+        totalCount: data.totalCount || (data.items ? data.items.length : 0),
+        expiringSoonCount: data.expiringSoonCount || 0
+      };
+    } catch (err) {
+      console.warn('API scanPantry fallback triggered:', err.message);
+      return {
+        success: true,
+        source: 'fallback',
+        items: [
+          { id: 'ing_1', name: 'Eggs', quantity: '6 large', category: 'Dairy & Eggs', freshness: 'fresh', daysLeft: 7 },
+          { id: 'ing_2', name: 'Tomatoes', quantity: '4 medium', category: 'Produce', freshness: 'fresh', daysLeft: 4 },
+          { id: 'ing_3', name: 'Garlic', quantity: '1 whole head', category: 'Produce', freshness: 'shelf_stable', daysLeft: 20 },
+          { id: 'ing_4', name: 'Olive Oil', quantity: '500ml', category: 'Spices & Oils', freshness: 'shelf_stable', daysLeft: 180 },
+          { id: 'ing_5', name: 'Parmesan Cheese', quantity: '150g block', category: 'Dairy & Eggs', freshness: 'fresh', daysLeft: 14 }
+        ],
         detectedIngredients: ['Eggs', 'Tomatoes', 'Garlic', 'Olive Oil', 'Parmesan'],
-        confidence: 0.95,
-        source: 'Frontend Fallback',
+        totalCount: 5,
+        expiringSoonCount: 1
       };
     }
   },
 
-  // Generate Recipes
-  async generateRecipes(ingredients, dietaryRestrictions = [], mealType = 'Any') {
+  // Scan Pantry from File Upload / Camera
+  async scanPantryWithImage(file) {
+    const base64Data = await fileToBase64(file);
+    return await this.scanPantry({
+      imageBase64: base64Data,
+      mimeType: file.type || 'image/jpeg'
+    });
+  },
+
+  // Generate Recipes based on ingredients, filters, and search query
+  async generateRecipes(ingredients = [], filter = 'All', sortBy = 'Best Match', searchQuery = '') {
     try {
-      return await fetchApi('/recipes/generate', {
+      const res = await fetchApi('/recipes/generate', {
         method: 'POST',
-        body: JSON.stringify({ ingredients, dietaryRestrictions, mealType }),
+        body: JSON.stringify({ ingredients, filter, sortBy, searchQuery }),
       });
-    } catch {
-      // Fallback mock recipes if offline
+
+      const data = res.data || {};
       return {
         success: true,
-        mode: 'mock',
-        recipes: [
+        source: data.source || 'backend',
+        recipes: data.recipes || []
+      };
+    } catch (err) {
+      console.warn('API generateRecipes fallback triggered:', err.message);
+      return {
+        success: true,
+        source: 'fallback',
+        recipes: []
+      };
+    }
+  },
+
+  // Get AI Substitute for an ingredient
+  async getSubstitute(ingredient, recipeContext = '') {
+    try {
+      const res = await fetchApi('/recipes/substitute', {
+        method: 'POST',
+        body: JSON.stringify({ ingredient, recipeContext }),
+      });
+
+      const data = res.data || {};
+      const alternatives = data.alternatives || [];
+      const primary = alternatives[0] || {};
+
+      return {
+        success: true,
+        target: data.target || ingredient,
+        alternatives: alternatives,
+        substitute: primary.name || 'Greek Yogurt + Milk',
+        ratio: primary.ratio || '1:1 ratio',
+        culinaryTip: primary.notes || 'Smart AI swap maintains rich mouthfeel and texture.'
+      };
+    } catch (err) {
+      console.warn('API getSubstitute fallback triggered:', err.message);
+      return {
+        success: true,
+        target: ingredient,
+        alternatives: [
           {
-            id: 'recipe-1',
-            title: 'Creamy Garlic Parmesan Pasta',
-            cuisine: 'Italian',
-            prepTime: 20,
-            calories: 520,
-            matchPercentage: 95,
-            image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAOtz5o2jWaPZxsZgbb0RNYuhF82KgRvCTR3bUz9w9blI29vypsoNWss5BJmdmsqR2idccG0zT1rEhhBkDi37aG8RfiUXHZbrLRoFbEF8jQKKGTQUsKxjMReREeJXrYeoHdRSdpQBhOioHQeJjp7dFlRwe8iED4jXHZqD3bl_eG92sO40MzEEjlc3rdHrUxJElFmhRQ_W2sY3fyc6E_zDwU-KJe478rYvuRInvZcnjTVxJVtzvtp2oqy8QKLXyorFnw8fdfNkSRzrc',
-            ingredients: [
-              { name: '200g Fettuccine', available: true },
-              { name: '3 cloves minced garlic', available: true },
-              { name: '50g grated parmesan', available: true },
-              { name: '1 tbsp olive oil', available: true },
-              { name: '1/2 cup heavy cream', available: false },
-            ],
-            instructions: [
-              'Boil pasta in salted water until al dente.',
-              'Sauté minced garlic in olive oil over medium heat until fragrant (approx. 2 mins).',
-              'Reduce heat, stir in cream and grated parmesan until sauce thickens.',
-              'Toss cooked pasta in garlic cream sauce, garnish with cracked black pepper and serve hot.'
-            ],
-            missingIngredients: ['Heavy Cream'],
-            substitutions: [
-              { original: 'Heavy Cream', substitute: 'Greek Yogurt + Milk', ratio: '1:1 ratio' }
-            ],
-            macros: { protein: '18g', carbs: '62g', fats: '24g' }
-          },
-          {
-            id: 'recipe-2',
-            title: 'Shakshuka with Warm Spices',
-            cuisine: 'Middle Eastern',
-            prepTime: 25,
-            calories: 380,
-            matchPercentage: 90,
-            image: 'https://images.unsplash.com/photo-1590412200988-a436970781fa?auto=format&fit=crop&w=800&q=80',
-            ingredients: [
-              { name: '4 fresh eggs', available: true },
-              { name: '4 ripe tomatoes (chopped)', available: true },
-              { name: '2 cloves minced garlic', available: true },
-              { name: '1 tbsp olive oil', available: true },
-              { name: '1/2 tsp cumin & paprika', available: true }
-            ],
-            instructions: [
-              'Heat olive oil in a skillet over medium heat.',
-              'Add minced garlic and spices, cooking until fragrant.',
-              'Add chopped tomatoes and simmer for 10 minutes until sauce thickens.',
-              'Make small wells in sauce, crack eggs in, cover and cook for 5-7 minutes until whites are set.'
-            ],
-            missingIngredients: [],
-            substitutions: [],
-            macros: { protein: '22g', carbs: '19g', fats: '21g' }
+            name: 'Greek Yogurt + Milk',
+            ratio: '1:1 ratio (3/4 cup Greek Yogurt + 1/4 cup Milk)',
+            bestFor: 'Savory sauces, creamy pasta',
+            notes: 'Whisk 3/4 cup Greek yogurt with 1/4 cup milk to match heavy cream viscosity without adding excess fat.'
           }
-        ]
-      };
-    }
-  },
-
-  // Get AI Substitute
-  async getSubstitute(ingredient, targetRecipe = 'General Recipe', pantryContext = []) {
-    try {
-      return await fetchApi('/recipes/substitute', {
-        method: 'POST',
-        body: JSON.stringify({ ingredient, targetRecipe, pantryContext }),
-      });
-    } catch {
-      return {
-        success: true,
+        ],
         substitute: 'Greek Yogurt + Milk',
         ratio: '1:1 ratio',
-        culinaryTip: 'Whisk 3/4 cup Greek yogurt with 1/4 cup milk to match heavy cream viscosity without adding excess fat.',
+        culinaryTip: 'Whisk 3/4 cup Greek yogurt with 1/4 cup milk to match heavy cream viscosity without adding excess fat.'
       };
     }
   }

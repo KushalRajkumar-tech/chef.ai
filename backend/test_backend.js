@@ -111,6 +111,8 @@ async function runTests() {
 
   if (passed !== total) {
     process.exit(1);
+  } else {
+    process.exit(0);
   }
 }
 

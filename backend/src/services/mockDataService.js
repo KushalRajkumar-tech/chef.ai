@@ -1,6 +1,6 @@
 /**
- * Chef.ai Mock Data & Rule Engine Service
- * Provides rich, production-grade mock data for offline development, rapid testing, and API fallback.
+ * Chef.ai Mock Data & Smart Culinary Synthesis Engine
+ * Provides rich, production-grade recipes and dynamically generates customized recipes for ANY ingredient input.
  */
 
 export const MOCK_PANTRY_ITEMS = [
@@ -295,6 +295,116 @@ export const MOCK_RECIPES_DATABASE = [
   }
 ];
 
+/**
+ * Dynamically synthesizes recipes if ingredients do not match existing static templates
+ */
+function synthesizeCustomRecipes(ingredients = [], searchQuery = '') {
+  const mainIng = ingredients[0] || 'Fresh Pantry';
+  const secIng = ingredients[1] || 'Aromatics';
+  const thirdIng = ingredients[2] || 'Herbs';
+
+  return [
+    {
+      id: `rec_synth_${Date.now()}_1`,
+      title: searchQuery ? `Artisan ${searchQuery}` : `Golden Sautéed ${mainIng} & ${secIng} Skillet`,
+      description: `A fragrant, customized chef creation combining fresh ${mainIng} and ${secIng} with garlic-infused olive oil and seasoned to perfection.`,
+      cuisine: 'Fusion',
+      tags: ['Quick (<20m)', 'High Protein', 'Custom Pantry Match'],
+      prepTimeMinutes: 5,
+      cookTimeMinutes: 15,
+      totalTimeMinutes: 20,
+      calories: 460,
+      macros: { protein: '26g', carbs: '38g', fats: '16g', fiber: '5g' },
+      difficulty: 'Easy',
+      defaultServings: 2,
+      imageUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80',
+      ingredients: ingredients.map(ing => ({
+        name: ing,
+        amount: '100',
+        unit: 'g',
+        inPantry: true,
+        isMissing: false
+      })),
+      missingIngredients: [],
+      pantryMatchPercentage: 100,
+      isAllAvailable: true,
+      substitutionTip: null,
+      instructions: [
+        {
+          stepNumber: 1,
+          title: `Prep ${mainIng} and ${secIng}`,
+          description: `Wash, chop, and season ${mainIng} and ${secIng} with a pinch of salt and cracked pepper.`,
+          timerMinutes: 3,
+          timerLabel: 'Prep & Season'
+        },
+        {
+          stepNumber: 2,
+          title: 'Sauté in Olive Oil',
+          description: `Warm olive oil in a wide skillet over medium heat. Sauté ${mainIng} until golden and fragrant.`,
+          timerMinutes: 7,
+          timerLabel: 'Golden Sauté'
+        },
+        {
+          stepNumber: 3,
+          title: 'Combine & Simmer',
+          description: `Add remaining ingredients (${ingredients.slice(1).join(', ') || 'seasonings'}), cover, and gently simmer.`,
+          timerMinutes: 5,
+          timerLabel: 'Simmer & Glaze'
+        },
+        {
+          stepNumber: 4,
+          title: 'Plate and Serve Hot',
+          description: 'Garnish with fresh herbs, adjust salt to taste, and serve immediately in warm bowls.',
+          timerMinutes: 0,
+          timerLabel: 'Plating'
+        }
+      ]
+    },
+    {
+      id: `rec_synth_${Date.now()}_2`,
+      title: `Warm Mediterranean ${mainIng} Rice / Grain Bowl`,
+      description: `Nutrient-packed warm bowl featuring seared ${mainIng}, caramelized ${secIng}, and ${thirdIng} with a zesty garlic yogurt dressing.`,
+      cuisine: 'Mediterranean',
+      tags: ['High Protein', 'Budget-Friendly'],
+      prepTimeMinutes: 8,
+      cookTimeMinutes: 14,
+      totalTimeMinutes: 22,
+      calories: 490,
+      macros: { protein: '28g', carbs: '52g', fats: '14g', fiber: '6g' },
+      difficulty: 'Easy',
+      defaultServings: 2,
+      imageUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=80',
+      ingredients: ingredients.map(ing => ({
+        name: ing,
+        amount: '120',
+        unit: 'g',
+        inPantry: true,
+        isMissing: false
+      })),
+      missingIngredients: [],
+      pantryMatchPercentage: 100,
+      isAllAvailable: true,
+      substitutionTip: null,
+      instructions: [
+        {
+          stepNumber: 1,
+          title: 'Sear Main Ingredients',
+          description: `Heat pan with olive oil, sear ${mainIng} on high heat for deep color.`,
+          timerMinutes: 6,
+          timerLabel: 'Sear'
+        },
+        {
+          stepNumber: 2,
+          title: 'Toss Grain & Greens',
+          description: `Fold in ${secIng} and ${thirdIng} with warm grains or pasta.`,
+          timerMinutes: 4,
+          timerLabel: 'Warm Toss'
+        }
+      ]
+    }
+  ];
+}
+
 export const MOCK_SUBSTITUTIONS = {
   'heavy cream': {
     target: 'Heavy Cream',
@@ -338,13 +448,6 @@ export const MOCK_SUBSTITUTIONS = {
         bestFor: 'Breakfast bowls, dressings, baking',
         notes: 'Plant-based alternative rich in healthy fats.',
         dietary: ['Vegan', 'Dairy-Free']
-      },
-      {
-        name: 'Sour Cream',
-        ratio: '1:1 replacement',
-        bestFor: 'Sauces, tacos, baked potatoes',
-        notes: 'Slightly higher fat, delightfully rich tang.',
-        dietary: ['Vegetarian']
       }
     ]
   },
@@ -364,13 +467,6 @@ export const MOCK_SUBSTITUTIONS = {
         bestFor: 'Vegan pasta toppings, roasted veggies, soups',
         notes: 'Cheesy, nutty flavor packed with Vitamin B12 and zero dairy.',
         dietary: ['Vegan', 'Dairy-Free', 'Gluten-Free']
-      },
-      {
-        name: 'Aged White Cheddar',
-        ratio: '1:1 finely grated',
-        bestFor: 'Sauces, gratins, pasta',
-        notes: 'Similar crystallization and sharp punch.',
-        dietary: ['Vegetarian']
       }
     ]
   },
@@ -383,32 +479,6 @@ export const MOCK_SUBSTITUTIONS = {
         bestFor: 'Pancakes, baking, binding veggie patties',
         notes: 'High in Omega-3 fiber with gelatinous binding qualities.',
         dietary: ['Vegan', 'High Fiber']
-      },
-      {
-        name: 'Silken Tofu',
-        ratio: '1 egg = 1/4 cup pureed silken tofu',
-        bestFor: 'Scrambles, quiches, dense baking',
-        notes: 'Neutral flavor with excellent moisture retention.',
-        dietary: ['Vegan', 'High Protein']
-      }
-    ]
-  },
-  'olive oil': {
-    target: 'Olive Oil',
-    alternatives: [
-      {
-        name: 'Avocado Oil',
-        ratio: '1:1 replacement',
-        bestFor: 'High-heat searing, sautéing, salad dressings',
-        notes: 'High smoke point (520°F) with heart-healthy monounsaturated fats.',
-        dietary: ['Vegan', 'Heart-Healthy']
-      },
-      {
-        name: 'Clarified Butter (Ghee)',
-        ratio: '1:1 replacement',
-        bestFor: 'Roasting, curries, searing',
-        notes: 'Nutty, rich aroma with zero lactose and high heat tolerance.',
-        dietary: ['Vegetarian', 'Keto']
       }
     ]
   }
@@ -417,11 +487,10 @@ export const MOCK_SUBSTITUTIONS = {
 /**
  * Filter and rank mock recipes based on pantry items and requested criteria
  */
-export function getMockRecipes(ingredients = [], filter = 'All', sortBy = 'Best Match') {
+export function getMockRecipes(ingredients = [], filter = 'All', sortBy = 'Best Match', searchQuery = '') {
   const normalizedIngredients = (ingredients || []).map(i => i.toLowerCase().trim());
 
   let recipes = MOCK_RECIPES_DATABASE.map(rec => {
-    // Recalculate match percentage based on incoming ingredients if provided
     if (normalizedIngredients.length > 0) {
       const totalRecIngs = rec.ingredients.length;
       let matchedCount = 0;
@@ -444,8 +513,31 @@ export function getMockRecipes(ingredients = [], filter = 'All', sortBy = 'Best 
     return rec;
   });
 
+  // If user provided custom ingredients that don't match the standard database, synthesize customized dishes!
+  const anyGoodMatch = recipes.some(r => r.pantryMatchPercentage >= 40);
+  if (!anyGoodMatch && normalizedIngredients.length > 0) {
+    const custom = synthesizeCustomRecipes(ingredients, searchQuery);
+    recipes = [...custom, ...recipes];
+  }
+
+  // Search Query filter
+  if (searchQuery && searchQuery.trim()) {
+    const q = searchQuery.toLowerCase().trim();
+    const matchedSearch = recipes.filter(r => 
+      r.title.toLowerCase().includes(q) || 
+      r.cuisine.toLowerCase().includes(q) ||
+      r.ingredients.some(ing => ing.name.toLowerCase().includes(q))
+    );
+    if (matchedSearch.length > 0) {
+      recipes = matchedSearch;
+    } else {
+      // synthesize specific dish
+      recipes = synthesizeCustomRecipes(ingredients, searchQuery);
+    }
+  }
+
   // Apply dietary / time filter
-  if (filter && filter !== 'All') {
+  if (filter && filter !== 'All' && filter !== 'all') {
     recipes = recipes.filter(r => {
       if (filter === 'Quick (<20m)') return r.totalTimeMinutes <= 20;
       if (filter === 'High Protein') return r.tags.includes('High Protein');
@@ -475,21 +567,19 @@ export function getMockSubstitution(ingredientName) {
   if (!ingredientName) return null;
   const key = ingredientName.toLowerCase().trim();
 
-  // Exact or partial match in dictionary
   for (const [k, v] of Object.entries(MOCK_SUBSTITUTIONS)) {
     if (key.includes(k) || k.includes(key)) {
       return v;
     }
   }
 
-  // Fallback dynamic substitution
   return {
     target: ingredientName,
     alternatives: [
       {
-        name: `Neutral cooking oil or broth substitute for ${ingredientName}`,
+        name: `Nutritional / Culinary Swap for ${ingredientName}`,
         ratio: '1:1 replacement',
-        bestFor: 'General cooking & sautéing',
+        bestFor: 'General cooking, boiling, or baking',
         notes: `Smart AI culinary estimate for ${ingredientName}. Adjust seasoning to taste.`,
         dietary: ['Vegetarian', 'Flexible']
       }
