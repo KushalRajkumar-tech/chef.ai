@@ -35,13 +35,13 @@ export default function SubstitutionDrawer({
   useEffect(() => {
     if (missingIngredient) {
       setActiveIngredient(missingIngredient);
-      fetchSwap(missingIngredient);
+      loadSwap(missingIngredient);
     } else {
-      fetchSwap(activeIngredient);
+      loadSwap(activeIngredient);
     }
   }, [missingIngredient]);
 
-  const fetchSwap = async (item) => {
+  const loadSwap = async (item) => {
     if (!item) return;
     setIsLoading(true);
     try {
@@ -55,7 +55,7 @@ export default function SubstitutionDrawer({
         setSelectedAlternativeIdx(0);
       }
     } catch (err) {
-      console.warn('Swap fetch error:', err);
+      console.warn('Swap calculation error:', err);
     } finally {
       setIsLoading(false);
     }
@@ -63,7 +63,7 @@ export default function SubstitutionDrawer({
 
   const handleSelectSwapItem = (itemName) => {
     setActiveIngredient(itemName);
-    fetchSwap(itemName);
+    loadSwap(itemName);
   };
 
   const handleApply = () => {
@@ -94,7 +94,7 @@ export default function SubstitutionDrawer({
 
   return (
     <div className="fixed inset-0 z-50 flex justify-center items-end bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="bg-[#181818] w-full max-w-4xl max-h-[90vh] h-[800px] rounded-t-[2rem] flex flex-col border border-secondary/15 border-b-0 overflow-hidden relative shadow-[0_-12px_50px_rgba(0,0,0,0.7)] animate-in slide-in-from-bottom duration-300">
+      <div className="bg-surface w-full max-w-4xl max-h-[90vh] h-[800px] rounded-t-[2rem] flex flex-col border border-secondary/15 border-b-0 overflow-hidden relative shadow-[0_-12px_50px_rgba(0,0,0,0.7)] animate-in slide-in-from-bottom duration-300">
         
         {/* Header Handle */}
         <div className="w-full flex justify-center pt-4 pb-2 shrink-0 cursor-grab">
@@ -120,7 +120,7 @@ export default function SubstitutionDrawer({
               </span>
               <button
                 onClick={onClose}
-                className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-white hover:bg-surface-container-high transition-colors"
+                className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors cursor-pointer"
               >
                 <span className="material-symbols-outlined text-sm">close</span>
               </button>
@@ -133,8 +133,8 @@ export default function SubstitutionDrawer({
               onClick={() => handleSelectSwapItem('Heavy Cream')}
               className={`snap-start shrink-0 flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold cursor-pointer transition-all border ${
                 activeIngredient.toLowerCase().includes('cream')
-                  ? 'bg-error-container/40 border-error text-error ring-1 ring-error'
-                  : 'bg-error-container/15 border-error/30 text-error hover:bg-error-container/30'
+                  ? 'badge-missing ring-1 ring-error'
+                  : 'badge-missing opacity-80 hover:opacity-100'
               }`}
             >
               <span className="material-symbols-outlined text-[16px]">warning</span>
@@ -145,8 +145,8 @@ export default function SubstitutionDrawer({
               onClick={() => handleSelectSwapItem('Greek Yogurt')}
               className={`snap-start shrink-0 flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold cursor-pointer transition-all border ${
                 activeIngredient.toLowerCase().includes('yogurt')
-                  ? 'bg-primary-container/40 border-primary text-primary ring-1 ring-primary'
-                  : 'bg-primary-container/15 border-primary/30 text-primary hover:bg-primary-container/30'
+                  ? 'badge-tag ring-1 ring-primary'
+                  : 'badge-tag opacity-80 hover:opacity-100'
               }`}
             >
               <span className="material-symbols-outlined text-[16px]">error</span>
@@ -157,8 +157,8 @@ export default function SubstitutionDrawer({
               onClick={() => handleSelectSwapItem('Fresh Spinach')}
               className={`snap-start shrink-0 flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold cursor-pointer transition-all border ${
                 activeIngredient.toLowerCase().includes('spinach')
-                  ? 'bg-surface-container-highest border-primary text-on-surface'
-                  : 'bg-surface-container border-outline-variant/30 text-on-surface-variant hover:bg-surface-container-high'
+                  ? 'pill-btn-active'
+                  : 'pill-btn-inactive'
               }`}
             >
               <span className="material-symbols-outlined text-[16px]">info</span>
@@ -167,12 +167,12 @@ export default function SubstitutionDrawer({
           </div>
 
           {/* AI Substitution Card (Bento Style) */}
-          <div className="bg-[#1E1E1E] rounded-2xl p-6 border border-primary/30 mb-8 shadow-xl relative overflow-hidden">
+          <div className="card-panel rounded-2xl p-6 border border-primary/30 mb-8 shadow-xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
             
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-primary-container flex items-center justify-center text-black shadow-md">
+                <div className="w-9 h-9 rounded-xl bg-primary-container flex items-center justify-center text-on-primary-container shadow-md">
                   <span className="material-symbols-outlined text-xl font-bold">auto_awesome</span>
                 </div>
                 <div>
@@ -180,15 +180,15 @@ export default function SubstitutionDrawer({
                     AI Smart Substitutes
                   </h2>
                   <span className="text-[11px] text-on-surface-variant">
-                    Replacing: <strong className="text-white">{activeIngredient}</strong>
+                    Replacing: <strong className="text-on-surface">{activeIngredient}</strong>
                   </span>
                 </div>
               </div>
 
               <button
-                onClick={() => fetchSwap(activeIngredient)}
+                onClick={() => loadSwap(activeIngredient)}
                 disabled={isLoading}
-                className="text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1 text-xs font-semibold disabled:opacity-50"
+                className="text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1 text-xs font-semibold disabled:opacity-50 cursor-pointer"
               >
                 <span className={`material-symbols-outlined text-sm ${isLoading ? 'animate-spin' : ''}`}>refresh</span>
                 {isLoading ? 'Searching...' : 'Refresh'}
@@ -206,11 +206,11 @@ export default function SubstitutionDrawer({
                     className={`p-4 rounded-xl border transition-all cursor-pointer ${
                       isSelected
                         ? 'bg-primary/10 border-primary ring-1 ring-primary'
-                        : 'bg-[#141414] border-secondary/10 hover:border-secondary/30'
+                        : 'bg-surface-container-low border-secondary/10 hover:border-secondary/30'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className="font-bold text-sm text-white flex items-center gap-2">
+                      <span className="font-bold text-sm text-on-surface flex items-center gap-2">
                         <span className="material-symbols-outlined text-primary text-base">
                           {isSelected ? 'radio_button_checked' : 'radio_button_unchecked'}
                         </span>
@@ -235,7 +235,7 @@ export default function SubstitutionDrawer({
               <div className="bg-surface-container/60 p-3.5 rounded-xl border border-secondary/10 mb-5 flex items-start gap-2.5">
                 <span className="text-base">💡</span>
                 <p className="text-xs text-on-surface-variant leading-relaxed">
-                  <strong className="text-white font-semibold">Chef's Advice:</strong> {activeAlternative.notes}
+                  <strong className="text-on-surface font-semibold">Chef's Advice:</strong> {activeAlternative.notes}
                 </p>
               </div>
             )}
@@ -243,7 +243,7 @@ export default function SubstitutionDrawer({
             {/* Apply Button */}
             <button
               onClick={handleApply}
-              className="w-full bg-primary-container hover:bg-primary-fixed text-black font-bold py-3.5 px-6 rounded-xl transition-all shadow-[0_4px_16px_rgba(255,191,0,0.25)] flex items-center justify-center gap-2 text-sm cursor-pointer"
+              className="w-full bg-primary-container hover:bg-primary-fixed text-on-primary-container font-bold py-3.5 px-6 rounded-xl transition-all shadow-[0_4px_16px_rgba(255,191,0,0.25)] flex items-center justify-center gap-2 text-sm cursor-pointer"
             >
               <span className="material-symbols-outlined text-lg">check_circle</span>
               Apply {activeAlternative?.name || 'Substitution'}
@@ -253,12 +253,12 @@ export default function SubstitutionDrawer({
           {/* Inventory Breakdown Section */}
           <div className="mb-6">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="font-headline-md text-base font-bold text-white">
+              <h3 className="font-headline-md text-base font-bold text-on-surface">
                 Detected Pantry Inventory
               </h3>
               <button
                 onClick={() => setShowAddCustom(!showAddCustom)}
-                className="text-xs text-primary hover:underline flex items-center gap-1 font-semibold"
+                className="text-xs text-primary hover:underline flex items-center gap-1 font-semibold cursor-pointer"
               >
                 <span className="material-symbols-outlined text-sm">add</span>
                 Add Item
@@ -273,13 +273,13 @@ export default function SubstitutionDrawer({
                   value={customItemInput}
                   onChange={(e) => setCustomItemInput(e.target.value)}
                   placeholder="Enter item name (e.g., Coconut Milk)..."
-                  className="flex-1 bg-black/40 text-white text-xs px-3 py-2 rounded-lg border border-outline/30 focus:border-primary outline-none"
+                  className="flex-1 bg-surface-container-low text-on-surface text-xs px-3 py-2 rounded-lg border border-outline/30 focus:border-primary outline-none"
                   autoFocus
                 />
                 <button
                   type="submit"
                   disabled={!customItemInput.trim()}
-                  className="bg-primary-container text-black text-xs font-bold px-4 py-2 rounded-lg hover:bg-primary-fixed disabled:opacity-40"
+                  className="bg-primary-container text-on-primary-container text-xs font-bold px-4 py-2 rounded-lg hover:bg-primary-fixed disabled:opacity-40 cursor-pointer"
                 >
                   Save
                 </button>
@@ -292,10 +292,10 @@ export default function SubstitutionDrawer({
                 <button
                   key={cat}
                   onClick={() => setActiveCategory(cat)}
-                  className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                  className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs transition-all cursor-pointer ${
                     activeCategory === cat
-                      ? 'bg-primary-container text-black'
-                      : 'bg-surface-container text-on-surface-variant hover:text-white'
+                      ? 'pill-btn-active font-bold'
+                      : 'pill-btn-inactive font-medium'
                   }`}
                 >
                   {cat}
@@ -315,32 +315,32 @@ export default function SubstitutionDrawer({
                   return (
                     <div
                       key={idx}
-                      className="flex items-center justify-between p-3.5 bg-[#1E1E1E] rounded-xl border border-secondary/10 hover:border-secondary/25 transition-all"
+                      className="flex items-center justify-between p-3.5 card-panel rounded-xl border border-secondary/10 hover:border-secondary/25 transition-all"
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-surface-container rounded-lg flex items-center justify-center text-primary font-bold text-sm">
                           {item.name.charAt(0)}
                         </div>
                         <div>
-                          <p className="text-sm font-bold text-white">{item.name}</p>
+                          <p className="text-sm font-bold text-on-surface">{item.name}</p>
                           <p className="text-xs text-on-surface-variant">{item.quantity || 'In Stock'}</p>
                         </div>
                       </div>
 
                       <div className="flex items-center gap-3">
                         {isExpiring ? (
-                          <span className="text-[11px] bg-error-container/20 text-error px-2.5 py-1 rounded-full font-bold border border-error/30">
+                          <span className="badge-missing text-[11px] px-2.5 py-1 rounded-full font-bold border">
                             {item.daysLeft !== undefined && item.daysLeft <= 0 ? 'Expired' : `${item.daysLeft}d left`}
                           </span>
                         ) : (
-                          <span className="text-[11px] bg-green-950/40 text-green-400 px-2.5 py-1 rounded-full font-bold border border-green-800/40">
+                          <span className="badge-ready text-[11px] px-2.5 py-1 rounded-full font-bold border">
                             Fresh
                           </span>
                         )}
 
                         <button
                           onClick={() => handleSelectSwapItem(item.name)}
-                          className="text-xs text-primary hover:underline font-semibold"
+                          className="text-xs text-primary hover:underline font-semibold cursor-pointer"
                         >
                           Find Swaps
                         </button>

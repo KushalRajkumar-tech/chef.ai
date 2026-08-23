@@ -6,6 +6,9 @@ import SubstitutionDrawer from './components/SubstitutionDrawer';
 import { api } from './services/api';
 
 export default function App() {
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('chefai_theme') || 'dark';
+  });
   const [ingredients, setIngredients] = useState(['Chicken Breast', 'Rice', 'Broccoli', 'Garlic', 'Olive Oil']);
   const [pantryItems, setPantryItems] = useState([]);
   const [recipes, setRecipes] = useState([]);
@@ -18,8 +21,18 @@ export default function App() {
   
   const [isScanning, setIsScanning] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [backendMode, setBackendMode] = useState('connecting');
+  const [backendMode, setBackendMode] = useState('standalone');
   const [toast, setToast] = useState(null);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    document.body.setAttribute('data-theme', theme);
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+    document.documentElement.classList.toggle('light', theme === 'light');
+    document.body.classList.toggle('dark', theme === 'dark');
+    document.body.classList.toggle('light', theme === 'light');
+    localStorage.setItem('chefai_theme', theme);
+  }, [theme]);
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
@@ -30,10 +43,10 @@ export default function App() {
     async function init() {
       try {
         const health = await api.checkHealth();
-        setBackendMode(health.mode || 'offline');
+        setBackendMode(health.mode || 'standalone');
         
         // Initial recipes for the default ingredients
-        fetchInitialRecipes(ingredients, 'all');
+        loadMatchedRecipes(ingredients, 'all');
 
         // Sync pantry inventory
         const pantryRes = await api.scanPantry();
@@ -47,7 +60,7 @@ export default function App() {
     init();
   }, []);
 
-  const fetchInitialRecipes = async (ingList, filter = activeFilter, searchQuery = '') => {
+  const loadMatchedRecipes = async (ingList, filter = activeFilter, searchQuery = '') => {
     setIsGenerating(true);
     try {
       const res = await api.generateRecipes(ingList, filter, 'Best Match', searchQuery);
@@ -55,7 +68,7 @@ export default function App() {
         setRecipes(res.recipes);
       }
     } catch (err) {
-      console.warn('Backend fetch failed, using fallback recipes:', err);
+      console.warn('Mock recipes calculation error:', err);
     } finally {
       setIsGenerating(false);
     }
@@ -68,7 +81,7 @@ export default function App() {
       setIngredients(updated);
       showToast(`Added "${trimmed}"! Updating recipes...`, 'success');
       // Automatically refresh recipes for new ingredient
-      fetchInitialRecipes(updated, activeFilter);
+      loadMatchedRecipes(updated, activeFilter);
     }
   };
 
@@ -76,7 +89,7 @@ export default function App() {
     const updated = ingredients.filter((i) => i.toLowerCase() !== item.toLowerCase());
     setIngredients(updated);
     showToast(`Removed "${item}"`, 'info');
-    fetchInitialRecipes(updated, activeFilter);
+    loadMatchedRecipes(updated, activeFilter);
   };
 
   const handleImageScan = async (file) => {
@@ -89,7 +102,7 @@ export default function App() {
         setIngredients(merged);
         if (res.items) setPantryItems(res.items);
         showToast(`AI detected ${res.detectedIngredients.length} ingredients!`, 'success');
-        fetchInitialRecipes(merged, activeFilter);
+        loadMatchedRecipes(merged, activeFilter);
       } else {
         showToast('No new ingredients recognized in photo', 'warning');
       }
@@ -103,18 +116,18 @@ export default function App() {
 
   const handleGenerateRecipes = async () => {
     showToast(`Chef.ai is creating recipes with your ${ingredients.length} ingredients!`, 'success');
-    await fetchInitialRecipes(ingredients, activeFilter);
+    await loadMatchedRecipes(ingredients, activeFilter);
     setActiveTab('feed');
   };
 
   const handleSelectFilter = (filter) => {
     setActiveFilter(filter);
-    fetchInitialRecipes(ingredients, filter);
+    loadMatchedRecipes(ingredients, filter);
   };
 
   const handleSearchAI = async (query) => {
     showToast(`Chef.ai is crafting a recipe for "${query}"...`, 'info');
-    await fetchInitialRecipes(ingredients, activeFilter, query);
+    await loadMatchedRecipes(ingredients, activeFilter, query);
     setActiveTab('feed');
     showToast(`Created custom dishes for "${query}"!`, 'success');
   };
@@ -164,36 +177,36 @@ export default function App() {
   };
 
   return (
-    <div className="bg-background text-on-background min-h-screen flex flex-col pt-16 pb-[88px] md:pb-0">
+    <div className="app-root bg-background text-on-background min-h-screen flex flex-col pt-16 pb-[88px] md:pb-0">
       
       {/* Toast Notification */}
       {toast && (
         <div className="fixed top-20 right-4 z-50 animate-in slide-in-from-top duration-300">
-          <div className={`px-4 py-2.5 rounded-xl shadow-xl border text-sm font-semibold flex items-center gap-2 backdrop-blur-md ${
+          <div className={`px-4 py-2.5 rounded-xl shadow-2xl border text-sm font-semibold flex items-center gap-2 backdrop-blur-md ${
             toast.type === 'success' 
-              ? 'bg-green-950/90 text-green-300 border-green-700/50' 
+              ? 'bg-emerald-900/95 text-white border-emerald-500' 
               : toast.type === 'warning'
-              ? 'bg-amber-950/90 text-amber-300 border-amber-700/50'
-              : 'bg-surface-container-high/90 text-on-surface border-primary/30'
+              ? 'bg-amber-900/95 text-white border-amber-500' 
+              : 'card-panel text-on-surface border-primary/40'
           }`}>
-            <span className="material-symbols-outlined text-base">
+            <span className="material-symbols-outlined text-base text-white">
               {toast.type === 'success' ? 'check_circle' : toast.type === 'warning' ? 'warning' : 'info'}
             </span>
-            {toast.message}
+            <span>{toast.message}</span>
           </div>
         </div>
       )}
 
       {/* Top Navigation Bar */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-[#131313]/90 backdrop-blur-md border-b border-secondary/10 shadow-md flex justify-between items-center h-16 px-6 max-w-7xl mx-auto">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-surface/90 backdrop-blur-md border-b border-secondary/10 shadow-md flex justify-between items-center h-16 px-6 max-w-7xl mx-auto transition-colors duration-300">
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab('hub')}>
-          <div className="w-9 h-9 rounded-xl bg-primary-container flex items-center justify-center text-black shadow-md">
+          <div className="w-9 h-9 rounded-xl bg-primary-container flex items-center justify-center text-on-primary-container shadow-md">
             <span className="material-symbols-outlined text-2xl font-bold">restaurant</span>
           </div>
           <span className="font-headline-md text-xl font-bold text-primary">
             Chef.ai
           </span>
-          <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-surface-container text-on-surface-variant border border-outline/20">
+          <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-surface-container text-on-surface-variant border border-outline/20 hidden sm:inline-block">
             {backendMode === 'live' ? '⚡ Live AI' : '🍲 Culinary Engine'}
           </span>
         </div>
@@ -230,16 +243,31 @@ export default function App() {
         </nav>
 
         {/* Header Right Actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
+          {/* Custom Theme Toggle Switch */}
+          <button
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container hover:bg-surface-container-high border border-outline/30 text-on-surface transition-all cursor-pointer shadow-sm hover:scale-105 active:scale-95"
+            title={theme === 'dark' ? 'Switch to Warm Linen Light Mode' : 'Switch to Dark Mode'}
+            aria-label="Toggle Theme"
+          >
+            <span className="material-symbols-outlined text-[17px] text-primary transition-transform duration-300" style={{ fontVariationSettings: "'FILL' 1" }}>
+              {theme === 'dark' ? 'dark_mode' : 'light_mode'}
+            </span>
+            <span className="text-xs font-semibold capitalize hidden sm:inline text-on-surface">
+              {theme === 'dark' ? 'Dark' : 'Light'}
+            </span>
+          </button>
+
           <button
             onClick={() => setIsDrawerOpen(true)}
-            className="bg-surface-container hover:bg-surface-container-high text-primary px-3.5 py-1.5 rounded-full font-label-sm text-xs font-semibold border border-primary/30 flex items-center gap-1.5 transition-all cursor-pointer"
+            className="bg-surface-container hover:bg-surface-container-high text-primary px-3.5 py-1.5 rounded-full font-label-sm text-xs font-semibold border border-primary/30 flex items-center gap-1.5 transition-all cursor-pointer hover:scale-105 active:scale-95"
             title="Open Pantry Inventory & AI Substitutions"
           >
             <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>
               swap_horiz
             </span>
-            AI Swaps
+            <span className="hidden sm:inline">AI Swaps</span>
           </button>
         </div>
       </header>
@@ -291,7 +319,7 @@ export default function App() {
       />
 
       {/* Mobile Bottom Navigation Bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#131313]/95 backdrop-blur-md border-t border-secondary/10 flex justify-around items-center px-4 py-2.5">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface/95 backdrop-blur-md border-t border-secondary/10 flex justify-around items-center px-4 py-2.5 transition-colors duration-300">
         <button
           onClick={() => setActiveTab('hub')}
           className={`flex flex-col items-center justify-center p-1.5 transition-all ${

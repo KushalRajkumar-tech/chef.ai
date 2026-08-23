@@ -112,7 +112,7 @@ export default function RecipeModal({ recipe, onClose, onOpenSubstituteDrawer })
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-0 md:p-4 overflow-y-auto bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="bg-[#131313] border border-secondary/15 rounded-none md:rounded-3xl w-full max-w-3xl max-h-[100vh] md:max-h-[92vh] overflow-y-auto shadow-2xl flex flex-col relative text-on-surface hide-scrollbar">
+      <div className="bg-surface border border-secondary/15 rounded-none md:rounded-3xl w-full max-w-3xl max-h-[100vh] md:max-h-[92vh] overflow-y-auto shadow-2xl flex flex-col relative text-on-surface hide-scrollbar">
         
         {/* ========================================================================= */}
         {/* MODE 1: INTERACTIVE STEP-BY-STEP COOK-ALONG MODE                          */}
@@ -124,7 +124,7 @@ export default function RecipeModal({ recipe, onClose, onOpenSubstituteDrawer })
               <div className="flex justify-between items-center mb-4">
                 <button
                   onClick={() => setIsCookAlongActive(false)}
-                  className="flex items-center gap-1.5 text-xs text-on-surface-variant hover:text-white bg-surface-container px-3 py-1.5 rounded-full border border-outline/20 transition-all"
+                  className="flex items-center gap-1.5 text-xs text-on-surface-variant hover:text-on-surface bg-surface-container px-3 py-1.5 rounded-full border border-outline/20 transition-all cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-sm">arrow_back</span>
                   Exit Cook-Along
@@ -136,7 +136,7 @@ export default function RecipeModal({ recipe, onClose, onOpenSubstituteDrawer })
 
                 <button
                   onClick={onClose}
-                  className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-white"
+                  className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-sm">close</span>
                 </button>
@@ -151,12 +151,12 @@ export default function RecipeModal({ recipe, onClose, onOpenSubstituteDrawer })
               </div>
 
               {/* Step Detail Card */}
-              <div className="bg-[#1C1C1C] rounded-2xl p-6 md:p-8 border border-primary/20 shadow-xl relative overflow-hidden mb-6">
+              <div className="card-panel rounded-2xl p-6 md:p-8 border border-primary/20 shadow-xl relative overflow-hidden mb-6">
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="w-8 h-8 rounded-full bg-primary-container text-black font-bold flex items-center justify-center text-sm">
+                  <span className="w-8 h-8 rounded-full bg-primary-container text-on-primary-container font-bold flex items-center justify-center text-sm">
                     {currentStepIndex + 1}
                   </span>
-                  <h2 className="font-headline-lg-mobile md:font-headline-lg text-lg md:text-xl font-bold text-white">
+                  <h2 className="font-headline-lg-mobile md:font-headline-lg text-lg md:text-xl font-bold text-on-surface">
                     {activeStepTitle}
                   </h2>
                 </div>
@@ -196,7 +196,7 @@ export default function RecipeModal({ recipe, onClose, onOpenSubstituteDrawer })
                         setTimerSeconds(mins * 60);
                         setTimerFinished(false);
                       }}
-                      className="text-on-surface-variant hover:text-white p-2 rounded-lg bg-surface-container"
+                      className="text-on-surface-variant hover:text-on-surface p-2 rounded-lg bg-surface-container cursor-pointer transition-colors"
                       title="Reset Timer"
                     >
                       <span className="material-symbols-outlined text-base">replay</span>
@@ -293,17 +293,17 @@ export default function RecipeModal({ recipe, onClose, onOpenSubstituteDrawer })
 
                 {/* Serving Size Stepper */}
                 <div className="flex items-center gap-x-4 mt-2">
-                  <div className="flex items-center bg-surface-container-high/80 backdrop-blur-md rounded-full px-2 py-1 border border-outline/20">
+                  <div className="flex items-center image-match-badge rounded-full px-2 py-1">
                     <button
                       onClick={() => setServings(Math.max(1, servings - 1))}
-                      className="w-7 h-7 rounded-full flex items-center justify-center text-on-surface hover:bg-primary-container hover:text-black transition-colors"
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-white hover:bg-primary-container hover:text-black transition-colors cursor-pointer"
                     >
                       <span className="material-symbols-outlined text-sm">remove</span>
                     </button>
                     <span className="font-label-md text-white font-bold px-3 text-sm">{servings} Servings</span>
                     <button
                       onClick={() => setServings(servings + 1)}
-                      className="w-7 h-7 rounded-full flex items-center justify-center text-on-surface hover:bg-primary-container hover:text-black transition-colors"
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-white hover:bg-primary-container hover:text-black transition-colors cursor-pointer"
                     >
                       <span className="material-symbols-outlined text-sm">add</span>
                     </button>
@@ -315,7 +315,7 @@ export default function RecipeModal({ recipe, onClose, onOpenSubstituteDrawer })
             {/* Content Body */}
             <div className="px-6 py-6 flex flex-col gap-y-6 max-w-3xl mx-auto w-full">
               {/* Nutrition & Macros Bar */}
-              <section className="bg-[#1E1E1E] rounded-2xl p-5 border border-secondary/10 flex flex-col gap-y-3">
+              <section className="card-panel rounded-2xl p-5 border border-secondary/10 flex flex-col gap-y-3">
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-on-surface-variant">Estimated Macros (for {servings} serving{servings > 1 ? 's' : ''})</span>
                   <span className="font-bold text-primary">{recipe.calories ? Math.round(recipe.calories * (servings / defaultServings)) : 520} kcal</span>
@@ -333,19 +333,19 @@ export default function RecipeModal({ recipe, onClose, onOpenSubstituteDrawer })
               </section>
 
               {/* Cook-Along Hero Banner */}
-              <div className="bg-gradient-to-r from-primary/15 via-[#1E1E1E] to-[#1E1E1E] border border-primary/30 p-4 rounded-2xl flex items-center justify-between gap-4">
+              <div className="bg-gradient-to-r from-primary/15 via-surface-container to-surface-container border border-primary/30 p-4 rounded-2xl flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary-container text-black flex items-center justify-center font-bold">
+                  <div className="w-10 h-10 rounded-xl bg-primary-container text-on-primary-container flex items-center justify-center font-bold">
                     <span className="material-symbols-outlined text-xl">skillet</span>
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-white">Ready to Cook?</h3>
+                    <h3 className="text-sm font-bold text-on-surface">Ready to Cook?</h3>
                     <p className="text-xs text-on-surface-variant">Step-by-step guidance with timers and voice prompts</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setIsCookAlongActive(true)}
-                  className="bg-primary-container text-black font-bold text-xs px-4 py-2.5 rounded-xl hover:bg-primary-fixed transition-all shrink-0"
+                  className="bg-primary-container text-on-primary-container font-bold text-xs px-4 py-2.5 rounded-xl hover:bg-primary-fixed transition-all shrink-0 cursor-pointer"
                 >
                   Start Cook-Along
                 </button>
@@ -358,7 +358,7 @@ export default function RecipeModal({ recipe, onClose, onOpenSubstituteDrawer })
                   <span className="text-xs text-on-surface-variant">Check off as you cook</span>
                 </div>
 
-                <div className="bg-[#1E1E1E] rounded-2xl p-3 border border-secondary/10 flex flex-col divide-y divide-secondary/5">
+                <div className="card-panel rounded-2xl p-3 border border-secondary/10 flex flex-col divide-y divide-secondary/5">
                   {recipe.ingredients?.map((ing, idx) => {
                     const name = typeof ing === 'string' ? ing : ing.name;
                     const amount = typeof ing === 'object' && ing.amount ? scaleAmount(ing.amount) : '';
@@ -384,7 +384,7 @@ export default function RecipeModal({ recipe, onClose, onOpenSubstituteDrawer })
                         {isMissing && (
                           <button
                             onClick={() => onOpenSubstituteDrawer(name)}
-                            className="px-3 py-1 rounded-full bg-primary-container/15 text-primary border border-primary/30 text-xs font-bold hover:bg-primary-container/30 transition-colors flex items-center gap-1 shrink-0 ml-2"
+                            className="px-3 py-1 rounded-full bg-primary-container/15 text-primary border border-primary/30 text-xs font-bold hover:bg-primary-container/30 transition-colors flex items-center gap-1 shrink-0 ml-2 cursor-pointer"
                           >
                             <span className="material-symbols-outlined text-[14px]">auto_awesome</span> Swap
                           </button>
@@ -438,7 +438,7 @@ export default function RecipeModal({ recipe, onClose, onOpenSubstituteDrawer })
                     return (
                       <div
                         key={idx}
-                        className={`bg-[#1E1E1E] rounded-2xl p-5 border transition-all ${
+                        className={`card-panel rounded-2xl p-5 border transition-all ${
                           isDone 
                             ? 'opacity-60 border-secondary/5' 
                             : 'border-secondary/10 hover:border-primary/40'

@@ -1,21 +1,73 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function PantryScanner({
-  ingredients,
+  ingredients = [],
   pantryItems = [],
   onAddIngredient,
   onRemoveIngredient,
-  onImageScan,
   onGenerateRecipes,
-  isScanning,
   isGenerating,
   activeFilter,
   onSelectFilter
 }) {
   const [newIngredient, setNewIngredient] = useState('');
-  const [selectedImagePreview, setSelectedImagePreview] = useState(null);
-  const [isDragOver, setIsDragOver] = useState(false);
-  const fileInputRef = useRef(null);
+  
+  // Mock AI Scanning Modal State (3-second simulated experience)
+  const [isMockScanningOpen, setIsMockScanningOpen] = useState(false);
+  const [scanProgress, setScanProgress] = useState(0);
+  const [detectedItemPreview, setDetectedItemPreview] = useState('Fresh Avocado');
+
+  const dummyScanItems = [
+    'Fresh Avocado',
+    'Ripe Lemons',
+    'Fresh Rosemary',
+    'Bell Peppers',
+    'Button Mushrooms',
+    'Baby Spinach'
+  ];
+
+  // Start the 3-second Mock Scan
+  const handleStartMockScan = () => {
+    // Choose a dummy item not yet in the pantry
+    const nextItem = dummyScanItems.find(
+      (item) => !ingredients.some((i) => i.toLowerCase() === item.toLowerCase())
+    ) || 'Fresh Avocado';
+
+    setDetectedItemPreview(nextItem);
+    setScanProgress(0);
+    setIsMockScanningOpen(true);
+  };
+
+  useEffect(() => {
+    let timer = null;
+    let progressInterval = null;
+
+    if (isMockScanningOpen) {
+      // Smoothly animate progress bar from 0% to 100% over 3s
+      const startTime = Date.now();
+      const duration = 3000;
+
+      progressInterval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const pct = Math.min(100, Math.round((elapsed / duration) * 100));
+        setScanProgress(pct);
+      }, 50);
+
+      // Auto-complete at exactly 3 seconds
+      timer = setTimeout(() => {
+        setIsMockScanningOpen(false);
+        setScanProgress(100);
+        if (onAddIngredient && detectedItemPreview) {
+          onAddIngredient(detectedItemPreview);
+        }
+      }, duration);
+    }
+
+    return () => {
+      clearTimeout(timer);
+      clearInterval(progressInterval);
+    };
+  }, [isMockScanningOpen, detectedItemPreview, onAddIngredient]);
 
   const handleAdd = (e) => {
     e.preventDefault();
@@ -23,32 +75,6 @@ export default function PantryScanner({
       onAddIngredient(newIngredient.trim());
       setNewIngredient('');
     }
-  };
-
-  const handleFileChange = (file) => {
-    if (!file || !file.type.startsWith('image/')) return;
-    const previewUrl = URL.createObjectURL(file);
-    setSelectedImagePreview(previewUrl);
-    if (onImageScan) {
-      onImageScan(file);
-    }
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setIsDragOver(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleFileChange(e.dataTransfer.files[0]);
-    }
-  };
-
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setIsDragOver(true);
-  };
-
-  const handleDragLeave = () => {
-    setIsDragOver(false);
   };
 
   const filterOptions = [
@@ -66,46 +92,51 @@ export default function PantryScanner({
   ];
 
   const expiringCount = pantryItems.filter(
-    (i) => i.freshness === 'expiring_soon' || i.freshness === 'expired'
+    (i) => i.freshness === 'expiring_soon' || i.daysLeft <= 2
   ).length || 2;
 
   return (
     <div className="flex flex-col gap-6 w-full max-w-5xl mx-auto">
+      
       {/* Header Text */}
       <section className="flex flex-col gap-1 mt-2">
-        <h1 className="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-on-surface">
+        <h1 className="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-on-surface font-bold">
           Dashboard &amp; Ingredient Hub
         </h1>
         <p className="font-body-md text-body-md text-on-surface-variant">
-          Add your kitchen ingredients or scan your fridge to discover personalized AI recipes.
+          Add your kitchen ingredients or try our AI Scanner to discover personalized recipes.
         </p>
       </section>
 
       {/* Quick Stats Bento */}
       <section className="grid grid-cols-2 gap-4">
-        <div className="bg-surface-container-low rounded-2xl p-5 border border-secondary/10 shadow-sm flex flex-col gap-2 relative overflow-hidden">
+        <div className="bg-surface-container-low rounded-2xl p-5 border border-secondary/10 shadow-sm flex flex-col gap-2 relative overflow-hidden transition-colors duration-300">
           <div className="flex items-center justify-between">
-            <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
+            <span className="material-symbols-outlined text-primary text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>
               inventory_2
             </span>
-            <span className="font-label-sm text-label-sm text-on-surface-variant bg-surface-container px-2 py-0.5 rounded-full">Pantry</span>
+            <span className="pill-btn-inactive font-label-sm text-xs px-2.5 py-0.5 rounded-full font-semibold">
+              Pantry
+            </span>
           </div>
           <div className="flex flex-col">
             <span className="font-headline-xl text-headline-xl text-on-surface font-bold">{ingredients.length}</span>
-            <span className="font-label-md text-label-md text-on-surface-variant">Active Ingredients</span>
+            <span className="font-label-md text-xs text-on-surface-variant">Active Ingredients</span>
           </div>
         </div>
 
-        <div className="bg-surface-container-low rounded-2xl p-5 border border-error/20 shadow-sm flex flex-col gap-2 relative overflow-hidden">
+        <div className="bg-surface-container-low rounded-2xl p-5 border border-error/20 shadow-sm flex flex-col gap-2 relative overflow-hidden transition-colors duration-300">
           <div className="flex items-center justify-between">
-            <span className="material-symbols-outlined text-error" style={{ fontVariationSettings: "'FILL' 1" }}>
+            <span className="material-symbols-outlined text-error text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>
               warning
             </span>
-            <span className="font-label-sm text-label-sm text-error bg-error-container/20 px-2 py-0.5 rounded-full">Urgent</span>
+            <span className="badge-alert font-label-sm text-xs px-2.5 py-0.5 rounded-full font-bold">
+              Alert
+            </span>
           </div>
           <div className="flex flex-col">
             <span className="font-headline-xl text-headline-xl text-error font-bold">{expiringCount}</span>
-            <span className="font-label-md text-label-md text-on-surface-variant">Expiring Soon</span>
+            <span className="font-label-md text-xs text-on-surface-variant">Expiring Soon (&le; 2d)</span>
           </div>
         </div>
       </section>
@@ -119,14 +150,20 @@ export default function PantryScanner({
               <button
                 key={filter.id}
                 onClick={() => onSelectFilter(filter.id)}
-                className={`px-4 py-2 rounded-full font-label-md text-label-md whitespace-nowrap active:scale-95 transition-all flex items-center gap-1.5 border cursor-pointer ${
+                className={`px-4 py-2 rounded-full font-label-md text-label-md whitespace-nowrap active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer ${
                   isActive
-                    ? 'bg-primary-container text-on-primary-container border-primary-container shadow-[0_0_12px_rgba(255,191,0,0.25)] font-semibold'
-                    : 'bg-surface-container border-outline-variant/40 text-on-surface hover:bg-surface-container-high hover:border-primary/40'
+                    ? 'pill-btn-active font-bold'
+                    : 'pill-btn-inactive font-medium'
                 }`}
               >
                 {filter.icon && (
-                  <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>
+                  <span
+                    className="material-symbols-outlined text-[18px] transition-colors"
+                    style={{
+                      color: isActive ? 'var(--icon-accent-active)' : 'var(--icon-accent)',
+                      fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0"
+                    }}
+                  >
                     {filter.icon}
                   </span>
                 )}
@@ -138,86 +175,36 @@ export default function PantryScanner({
       </section>
 
       {/* Main Ingredient Card */}
-      <section className="bg-[#1E1E1E] rounded-2xl border border-secondary/10 shadow-xl overflow-hidden flex flex-col backdrop-blur-xl">
-        {/* Hidden File Input */}
-        <input
-          type="file"
-          ref={fileInputRef}
-          accept="image/*"
-          capture="environment"
-          onChange={(e) => {
-            if (e.target.files?.[0]) handleFileChange(e.target.files[0]);
-          }}
-          className="hidden"
-        />
-
-        {/* Photo Upload / Capture Zone */}
+      <section className="card-panel rounded-2xl border border-secondary/10 shadow-xl overflow-hidden flex flex-col backdrop-blur-xl">
+        
+        {/* Photo Upload / Fake AI Scanner Zone */}
         <div
-          onClick={() => fileInputRef.current?.click()}
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          className={`p-6 border-b border-secondary/10 flex flex-col items-center justify-center gap-3 relative group cursor-pointer transition-colors ${
-            isDragOver
-              ? 'bg-primary-container/10 border-primary'
-              : 'bg-surface-container-lowest/50 hover:bg-surface-container-lowest/80'
-          }`}
+          onClick={handleStartMockScan}
+          className="p-6 border-b border-secondary/10 flex flex-col items-center justify-center gap-3 relative group cursor-pointer transition-colors bg-surface-container-lowest/50 hover:bg-surface-container-lowest/80"
+          title="Click to launch 3-second AI Scanner simulation"
         >
-          {selectedImagePreview ? (
-            <div className="flex flex-col items-center gap-3">
-              <div className="relative w-28 h-28 rounded-2xl overflow-hidden border-2 border-primary shadow-lg">
-                <img src={selectedImagePreview} alt="Captured Pantry" className="w-full h-full object-cover" />
-                {isScanning && (
-                  <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center text-primary text-xs font-semibold gap-1">
-                    <span className="material-symbols-outlined text-2xl animate-spin">progress_activity</span>
-                    Scanning...
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    fileInputRef.current?.click();
-                  }}
-                  className="text-xs bg-surface-container text-on-surface px-3 py-1 rounded-full hover:bg-surface-container-high border border-outline/30"
-                >
-                  Change Photo
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedImagePreview(null);
-                  }}
-                  className="text-xs text-error hover:underline px-2 py-1"
-                >
-                  Remove
-                </button>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="w-14 h-14 rounded-full bg-surface-container border border-outline/20 flex items-center justify-center group-hover:border-primary/50 group-hover:scale-105 transition-all duration-300 shadow-inner">
-                <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors text-2xl">
-                  {isScanning ? 'progress_activity' : 'add_a_photo'}
-                </span>
-              </div>
-              <div className="text-center">
-                <p className="font-label-md text-label-md text-on-surface font-semibold">
-                  {isScanning ? 'Gemini AI is analyzing your pantry...' : 'Tap to upload or take a food photo'}
-                </p>
-                <p className="font-label-sm text-xs text-on-surface-variant mt-0.5">
-                  AI vision automatically identifies items and freshness
-                </p>
-              </div>
-            </>
-          )}
+          <div className="w-14 h-14 rounded-full bg-surface-container border border-outline/20 flex items-center justify-center group-hover:border-primary-container group-hover:scale-105 transition-all duration-300 shadow-inner">
+            <span className="material-symbols-outlined text-primary text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+              add_a_photo
+            </span>
+          </div>
+          <div className="text-center">
+            <p className="font-label-md text-sm text-on-surface font-bold flex items-center justify-center gap-1.5">
+              <span>Tap to upload or take a food photo</span>
+              <span className="text-[10px] uppercase font-bold bg-primary-container text-on-primary-container px-2 py-0.5 rounded-full">
+                AI Vision
+              </span>
+            </p>
+            <p className="font-label-sm text-xs text-on-surface-variant mt-0.5">
+              Simulated optical scanner catalogs groceries automatically
+            </p>
+          </div>
         </div>
 
-        {/* Ingredient Entry & Tags */}
+        {/* Ingredient Entry & Tags / Empty State */}
         <div className="p-6 bg-surface-container/30 flex flex-col gap-4">
+          
+          {/* Manual Input Form */}
           <form onSubmit={handleAdd} className="relative">
             <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">
               add_circle
@@ -226,8 +213,8 @@ export default function PantryScanner({
               type="text"
               value={newIngredient}
               onChange={(e) => setNewIngredient(e.target.value)}
-              placeholder="Type ANY ingredient (e.g. Salmon, Chicken, Garlic, Avocado)..."
-              className="w-full bg-[#161616] text-on-surface font-body-md text-body-md pl-12 pr-24 py-3.5 rounded-xl border border-secondary/10 focus:border-primary focus:ring-1 focus:ring-primary placeholder:text-on-surface-variant/60 transition-all outline-none"
+              placeholder="Type ANY ingredient (e.g. Avocado, Salmon, Garlic, Pasta)..."
+              className="w-full bg-surface-container-low text-on-surface font-body-md text-sm pl-12 pr-24 py-3.5 rounded-xl border border-secondary/10 focus:border-primary focus:ring-1 focus:ring-primary placeholder:text-on-surface-variant/60 transition-all outline-none"
             />
             <button
               type="submit"
@@ -240,7 +227,7 @@ export default function PantryScanner({
 
           {/* Quick Suggestions */}
           <div className="flex flex-col gap-2">
-            <span className="font-label-sm text-xs text-on-surface-variant/80">Quick suggestions:</span>
+            <span className="font-label-sm text-xs text-on-surface-variant font-medium">Quick suggestions:</span>
             <div className="flex flex-wrap gap-1.5">
               {suggestedPantryTags
                 .filter((tag) => !ingredients.some((i) => i.toLowerCase() === tag.toLowerCase()))
@@ -250,7 +237,7 @@ export default function PantryScanner({
                     key={tag}
                     type="button"
                     onClick={() => onAddIngredient(tag)}
-                    className="text-xs bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-primary px-2.5 py-1 rounded-md border border-outline/20 transition-colors cursor-pointer"
+                    className="pill-btn-inactive text-xs px-2.5 py-1 rounded-md transition-colors cursor-pointer"
                   >
                     + {tag}
                   </button>
@@ -258,31 +245,143 @@ export default function PantryScanner({
             </div>
           </div>
 
-          {/* Current Ingredient Tags */}
-          <div className="flex flex-wrap gap-2 pt-2 border-t border-secondary/5">
-            {ingredients.map((item, idx) => (
-              <div
-                key={idx}
-                className="bg-primary/10 border border-primary/20 text-primary px-3 py-1.5 rounded-full font-label-sm text-label-sm flex items-center gap-1.5 group cursor-default hover:bg-primary/20 transition-colors"
-              >
-                <span>{item}</span>
+          {/* =============================================================== */}
+          {/* INGREDIENT TAGS LIST vs. BEAUTIFUL EMPTY STATE GRAPHICS         */}
+          {/* =============================================================== */}
+          {ingredients.length === 0 ? (
+            <div className="py-8 px-4 rounded-2xl bg-surface-container-low/70 border border-secondary/10 flex flex-col items-center text-center gap-4 transition-all duration-300 animate-in fade-in zoom-in-95">
+              
+              {/* Custom Clean Inline SVG Empty State Illustration */}
+              <div className="relative w-28 h-28 flex items-center justify-center">
+                <div className="absolute inset-0 bg-primary/10 rounded-full blur-xl pointer-events-none" />
+                <svg
+                  className="w-24 h-24 text-icon-accent float-gentle"
+                  style={{ color: 'var(--icon-accent)' }}
+                  viewBox="0 0 100 100"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  {/* Floating Steam / Aroma Lines */}
+                  <path
+                    d="M38 22C38 18 42 16 42 12"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    className="opacity-60"
+                  />
+                  <path
+                    d="M50 20C50 15 54 14 54 9"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    className="opacity-80"
+                  />
+                  <path
+                    d="M62 23C62 19 66 17 66 13"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    className="opacity-60"
+                  />
+
+                  {/* Pantry Basket Outline */}
+                  <path
+                    d="M20 40H80L72 78C71.5 81 68.8 83 65.5 83H34.5C31.2 83 28.5 81 28 78L20 40Z"
+                    fill="currentColor"
+                    fillOpacity="0.12"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinejoin="round"
+                  />
+
+                  {/* Basket Rim */}
+                  <rect
+                    x="16"
+                    y="36"
+                    width="68"
+                    height="7"
+                    rx="3.5"
+                    fill="currentColor"
+                    fillOpacity="0.25"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  />
+
+                  {/* Basket Handle */}
+                  <path
+                    d="M32 36C32 24 68 24 68 36"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeDasharray="4 3"
+                  />
+
+                  {/* Inside Sparkle Accent */}
+                  <path
+                    d="M50 52L52 57L57 59L52 61L50 66L48 61L43 59L48 57L50 52Z"
+                    fill="currentColor"
+                    className="animate-pulse"
+                  />
+                </svg>
+              </div>
+
+              {/* Empty Message */}
+              <div className="flex flex-col gap-1 max-w-sm">
+                <h3 className="font-headline font-bold text-base md:text-lg text-on-surface">
+                  Your pantry is looking a little bare!
+                </h3>
+                <p className="text-xs text-on-surface-variant leading-relaxed">
+                  Add some ingredients to begin or use the AI Scanner to discover custom chef recipes.
+                </p>
+              </div>
+
+              {/* Action Buttons to populate with 1-click */}
+              <div className="flex flex-wrap justify-center gap-2 pt-1">
                 <button
                   type="button"
-                  onClick={() => onRemoveIngredient(item)}
-                  className="material-symbols-outlined text-[16px] text-primary/70 hover:text-error hover:scale-110 transition-all cursor-pointer"
-                  title={`Remove ${item}`}
+                  onClick={() => ['Chicken Breast', 'Garlic', 'Olive Oil', 'Tomatoes'].forEach(onAddIngredient)}
+                  className="text-xs bg-primary-container text-on-primary-container font-bold px-3.5 py-1.5 rounded-full hover:bg-primary-fixed transition-all cursor-pointer shadow-sm"
                 >
-                  cancel
+                  + Add Mediterranean Staples
+                </button>
+                <button
+                  type="button"
+                  onClick={handleStartMockScan}
+                  className="text-xs bg-surface-container hover:bg-surface-container-high text-primary font-bold px-3.5 py-1.5 rounded-full border border-primary/30 transition-all cursor-pointer flex items-center gap-1"
+                >
+                  <span className="material-symbols-outlined text-sm">auto_awesome</span>
+                  Scan Pantry
                 </button>
               </div>
-            ))}
-          </div>
 
-          {/* Single Clear Primary CTA Button */}
+            </div>
+          ) : (
+            /* Populated Tags Container */
+            <div className="flex flex-wrap gap-2 pt-2 border-t border-secondary/5 transition-all duration-300">
+              {ingredients.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="badge-tag px-3 py-1.5 rounded-full font-label-sm text-xs font-semibold flex items-center gap-1.5 group cursor-default border transition-colors"
+                >
+                  <span>{item}</span>
+                  <button
+                    type="button"
+                    onClick={() => onRemoveIngredient(item)}
+                    className="material-symbols-outlined text-[16px] opacity-75 hover:opacity-100 hover:text-error hover:scale-110 transition-all cursor-pointer"
+                    title={`Remove ${item}`}
+                  >
+                    cancel
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Primary Recipe Generation CTA Button */}
           <button
             onClick={onGenerateRecipes}
             disabled={isGenerating || ingredients.length === 0}
-            className="w-full bg-primary-container hover:bg-primary-fixed text-on-primary-container font-label-md text-label-md font-bold py-3.5 rounded-xl mt-2 active:scale-[0.99] transition-all shadow-[0_4px_16px_rgba(255,191,0,0.25)] flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer text-sm"
+            className="w-full bg-primary-container hover:bg-primary-fixed text-on-primary-container font-headline font-bold py-3.5 rounded-xl mt-2 active:scale-[0.99] transition-all shadow-[0_4px_16px_rgba(255,191,0,0.25)] flex items-center justify-center gap-2 disabled:opacity-40 cursor-pointer text-sm"
           >
             <span className={`material-symbols-outlined ${isGenerating ? 'animate-spin' : ''}`}>
               {isGenerating ? 'progress_activity' : 'restaurant_menu'}
@@ -291,6 +390,88 @@ export default function PantryScanner({
           </button>
         </div>
       </section>
+
+      {/* ========================================================================= */}
+      {/* 3-SECOND MOCK AI SCANNING POPUP MODAL                                    */}
+      {/* ========================================================================= */}
+      {isMockScanningOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="card-panel border border-primary/40 rounded-3xl w-full max-w-md p-6 shadow-2xl flex flex-col items-center gap-5 relative overflow-hidden animate-in zoom-in-95 duration-300">
+            
+            {/* Top Header */}
+            <div className="w-full flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary text-xl">camera</span>
+                <h3 className="font-headline font-bold text-base text-on-surface">AI Optical Pantry Scanner</h3>
+              </div>
+              <span className="text-[11px] font-mono text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
+                {Math.round((3000 - (scanProgress / 100) * 3000) / 1000)}s
+              </span>
+            </div>
+
+            {/* Wireframe Viewfinder with Sweeping Laser Line */}
+            <div className="relative w-full h-56 rounded-2xl bg-black/80 overflow-hidden border border-primary/30 flex items-center justify-center shadow-inner">
+              
+              {/* Background Mock Grocery View */}
+              <img
+                src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80"
+                alt="Pantry Items in frame"
+                className="w-full h-full object-cover opacity-60 scale-105"
+              />
+
+              {/* Sweeping CSS Laser Line */}
+              <div className="scan-laser-line" />
+
+              {/* Wireframe Corner Brackets [ ] */}
+              <div className="absolute inset-4 pointer-events-none flex flex-col justify-between reticle-bracket">
+                <div className="flex justify-between">
+                  <div className="w-6 h-6 border-t-2 border-l-2 border-primary rounded-tl-lg" />
+                  <div className="w-6 h-6 border-t-2 border-r-2 border-primary rounded-tr-lg" />
+                </div>
+                
+                {/* Center Targeting Box */}
+                <div className="self-center flex flex-col items-center gap-1 bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-lg border border-primary/40">
+                  <div className="flex items-center gap-1.5 text-xs text-primary font-bold">
+                    <span className="w-2 h-2 rounded-full bg-primary animate-ping" />
+                    <span>Targeting: {detectedItemPreview}</span>
+                  </div>
+                  <span className="text-[10px] text-on-surface-variant font-mono">Confidence: 99.4%</span>
+                </div>
+
+                <div className="flex justify-between">
+                  <div className="w-6 h-6 border-b-2 border-l-2 border-primary rounded-bl-lg" />
+                  <div className="w-6 h-6 border-b-2 border-r-2 border-primary rounded-br-lg" />
+                </div>
+              </div>
+            </div>
+
+            {/* Animated Status Pill & Progress Bar */}
+            <div className="w-full flex flex-col gap-2 text-center">
+              <div className="flex items-center justify-between text-xs text-on-surface-variant">
+                <span className="flex items-center gap-1.5 text-primary font-semibold">
+                  <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
+                  AI Vision Analyzing Pantry...
+                </span>
+                <span className="font-mono text-xs font-bold text-primary">{scanProgress}%</span>
+              </div>
+
+              {/* Progress Bar Track */}
+              <div className="w-full h-2 bg-surface-container rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-primary-container transition-all duration-75 ease-linear"
+                  style={{ width: `${scanProgress}%` }}
+                />
+              </div>
+
+              <p className="text-[11px] text-on-surface-variant mt-1">
+                Auto-cataloging fresh produce without accessing device hardware.
+              </p>
+            </div>
+
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

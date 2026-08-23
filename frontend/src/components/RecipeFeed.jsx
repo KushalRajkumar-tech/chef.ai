@@ -78,7 +78,7 @@ export default function RecipeFeed({
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search or type dish name + Enter..."
-            className="w-full bg-[#161616] text-on-surface border border-secondary/15 rounded-full py-2.5 pl-12 pr-10 text-xs focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-on-surface-variant/60 shadow-inner"
+            className="w-full bg-surface-container-low text-on-surface border border-secondary/15 rounded-full py-2.5 pl-12 pr-10 text-xs focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-on-surface-variant/60 shadow-inner"
           />
           {searchTerm && (
             <button
@@ -97,13 +97,19 @@ export default function RecipeFeed({
         <div className="flex gap-2.5 min-w-max pb-1">
           <button
             onClick={() => setSortBy('best-match')}
-            className={`px-4 py-2 rounded-full font-label-md text-label-md flex items-center gap-1.5 transition-all cursor-pointer border ${
+            className={`px-4 py-2 rounded-full font-label-md text-label-md flex items-center gap-1.5 transition-all cursor-pointer ${
               sortBy === 'best-match'
-                ? 'bg-primary-container text-on-primary-container border-primary-container shadow-[0_0_12px_rgba(255,191,0,0.2)] font-bold'
-                : 'bg-surface-container text-on-surface-variant border-outline-variant/30 hover:text-on-surface hover:bg-surface-container-high'
+                ? 'pill-btn-active font-bold'
+                : 'pill-btn-inactive font-medium'
             }`}
           >
-            <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+            <span
+              className="material-symbols-outlined text-[18px] transition-colors"
+              style={{
+                color: sortBy === 'best-match' ? 'var(--icon-accent-active)' : 'var(--icon-accent)',
+                fontVariationSettings: "'FILL' 1"
+              }}
+            >
               auto_awesome
             </span>
             Best Match
@@ -111,25 +117,39 @@ export default function RecipeFeed({
 
           <button
             onClick={() => setSortBy('fastest')}
-            className={`px-4 py-2 rounded-full font-label-md text-label-md flex items-center gap-1.5 transition-all cursor-pointer border ${
+            className={`px-4 py-2 rounded-full font-label-md text-label-md flex items-center gap-1.5 transition-all cursor-pointer ${
               sortBy === 'fastest'
-                ? 'bg-primary-container text-on-primary-container border-primary-container shadow-[0_0_12px_rgba(255,191,0,0.2)] font-bold'
-                : 'bg-surface-container text-on-surface-variant border-outline-variant/30 hover:text-on-surface hover:bg-surface-container-high'
+                ? 'pill-btn-active font-bold'
+                : 'pill-btn-inactive font-medium'
             }`}
           >
-            <span className="material-symbols-outlined text-[18px]">timer</span>
+            <span
+              className="material-symbols-outlined text-[18px] transition-colors"
+              style={{
+                color: sortBy === 'fastest' ? 'var(--icon-accent-active)' : 'var(--icon-accent)'
+              }}
+            >
+              timer
+            </span>
             Fastest (&lt;20m)
           </button>
 
           <button
             onClick={() => setSortBy('low-cal')}
-            className={`px-4 py-2 rounded-full font-label-md text-label-md flex items-center gap-1.5 transition-all cursor-pointer border ${
+            className={`px-4 py-2 rounded-full font-label-md text-label-md flex items-center gap-1.5 transition-all cursor-pointer ${
               sortBy === 'low-cal'
-                ? 'bg-primary-container text-on-primary-container border-primary-container shadow-[0_0_12px_rgba(255,191,0,0.2)] font-bold'
-                : 'bg-surface-container text-on-surface-variant border-outline-variant/30 hover:text-on-surface hover:bg-surface-container-high'
+                ? 'pill-btn-active font-bold'
+                : 'pill-btn-inactive font-medium'
             }`}
           >
-            <span className="material-symbols-outlined text-[18px]">local_fire_department</span>
+            <span
+              className="material-symbols-outlined text-[18px] transition-colors"
+              style={{
+                color: sortBy === 'low-cal' ? 'var(--icon-accent-active)' : 'var(--icon-accent)'
+              }}
+            >
+              local_fire_department
+            </span>
             Lowest Calories
           </button>
         </div>
@@ -148,7 +168,7 @@ export default function RecipeFeed({
 
       {/* Recipe Cards Grid */}
       {filteredAndSortedRecipes.length === 0 ? (
-        <div className="bg-[#1E1E1E] rounded-2xl p-10 text-center flex flex-col items-center gap-4 border border-secondary/10">
+        <div className="card-panel rounded-2xl p-10 text-center flex flex-col items-center gap-4 border border-secondary/10">
           <span className="material-symbols-outlined text-4xl text-primary/50">soup_kitchen</span>
           <h3 className="font-headline-md text-on-surface font-bold">
             {searchTerm ? `No local matches for "${searchTerm}"` : 'No recipes yet'}
@@ -181,7 +201,7 @@ export default function RecipeFeed({
               <article
                 key={recipe.id}
                 onClick={() => onSelectRecipe(recipe)}
-                className="bg-[#1E1E1E] rounded-2xl overflow-hidden relative group border border-secondary/10 shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col justify-between"
+                className="card-panel rounded-2xl overflow-hidden relative group border border-secondary/10 shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col justify-between"
               >
                 <div>
                   {/* Image Header */}
@@ -194,14 +214,14 @@ export default function RecipeFeed({
 
                     {/* Match Badge */}
                     <div className="absolute top-3 left-3">
-                      <div className="bg-surface/90 backdrop-blur-md px-3 py-1 rounded-full border border-secondary/10 flex items-center gap-1.5 shadow-md">
+                      <div className="image-match-badge px-3 py-1 rounded-full flex items-center gap-1.5 shadow-md">
                         <span
-                          className="material-symbols-outlined text-primary-container text-[14px]"
+                          className="material-symbols-outlined match-icon text-[14px]"
                           style={{ fontVariationSettings: "'FILL' 1" }}
                         >
                           verified
                         </span>
-                        <span className="font-label-sm text-xs text-on-surface font-bold">
+                        <span className="font-label-sm text-xs font-bold text-white tracking-wide">
                           {matchScore}% Match
                         </span>
                       </div>
@@ -210,18 +230,18 @@ export default function RecipeFeed({
                     {/* Bookmark Icon */}
                     <button
                       onClick={(e) => toggleBookmark(e, recipe.id)}
-                      className="absolute top-3 right-3 w-9 h-9 rounded-full bg-surface/70 backdrop-blur-md flex items-center justify-center hover:bg-surface transition-colors text-on-surface border border-secondary/10 shadow-md"
+                      className="image-overlay-btn absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center cursor-pointer shadow-md"
                       title="Save Recipe"
                     >
                       <span
-                        className="material-symbols-outlined text-[18px] text-primary"
+                        className="material-symbols-outlined text-[18px]"
                         style={{ fontVariationSettings: isBookmarked ? "'FILL' 1" : "'FILL' 0" }}
                       >
                         {isBookmarked ? 'bookmark' : 'bookmark_border'}
                       </span>
                     </button>
 
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#1E1E1E] via-transparent to-transparent pointer-events-none" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
                   </div>
 
                   {/* Card Content */}
@@ -231,7 +251,7 @@ export default function RecipeFeed({
                         {recipe.cuisine || 'Fusion'}
                       </span>
                       {recipe.difficulty && (
-                        <span className="text-[11px] text-on-surface-variant bg-surface-container px-2 py-0.5 rounded">
+                        <span className="stat-pill text-[11px] px-2 py-0.5 rounded font-medium">
                           {recipe.difficulty}
                         </span>
                       )}
@@ -246,18 +266,18 @@ export default function RecipeFeed({
                     </p>
 
                     {/* Meta Pills */}
-                    <div className="flex flex-wrap gap-2 text-xs text-on-surface-variant">
-                      <div className="flex items-center gap-1 bg-surface-container px-2.5 py-1 rounded-md">
-                        <span className="material-symbols-outlined text-[14px] text-primary">schedule</span>
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      <div className="stat-pill flex items-center gap-1 px-2.5 py-1 rounded-md font-medium">
+                        <span className="material-symbols-outlined text-[14px] text-icon-accent">schedule</span>
                         {prepTime}m
                       </div>
-                      <div className="flex items-center gap-1 bg-surface-container px-2.5 py-1 rounded-md">
-                        <span className="material-symbols-outlined text-[14px] text-primary">local_fire_department</span>
+                      <div className="stat-pill flex items-center gap-1 px-2.5 py-1 rounded-md font-medium">
+                        <span className="material-symbols-outlined text-[14px] text-icon-accent">local_fire_department</span>
                         {recipe.calories} kcal
                       </div>
                       {recipe.macros?.protein && (
-                        <div className="flex items-center gap-1 bg-surface-container px-2.5 py-1 rounded-md">
-                          <span className="material-symbols-outlined text-[14px] text-primary">fitness_center</span>
+                        <div className="stat-pill flex items-center gap-1 px-2.5 py-1 rounded-md font-medium">
+                          <span className="material-symbols-outlined text-[14px] text-icon-accent">fitness_center</span>
                           {recipe.macros.protein}
                         </div>
                       )}
@@ -268,11 +288,11 @@ export default function RecipeFeed({
                 {/* Footer Availability Badge */}
                 <div className="px-5 pb-5 pt-0 flex items-center justify-between">
                   {hasMissing ? (
-                    <span className="text-[11px] text-error font-medium bg-error-container/15 border border-error-container/30 px-2.5 py-1 rounded-full truncate max-w-[65%]">
+                    <span className="badge-missing text-[11px] font-semibold border px-2.5 py-1 rounded-full truncate max-w-[65%]">
                       Missing: {missingList.join(', ')}
                     </span>
                   ) : (
-                    <span className="text-[11px] text-green-400 font-medium bg-green-950/40 border border-green-800/40 px-2.5 py-1 rounded-full">
+                    <span className="badge-ready text-[11px] font-semibold border px-2.5 py-1 rounded-full">
                       All Ingredients Ready
                     </span>
                   )}

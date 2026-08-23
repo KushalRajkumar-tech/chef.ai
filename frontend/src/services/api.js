@@ -1,159 +1,144 @@
-const API_BASE_URL = '/api';
-
 /**
- * Robust fetch wrapper with error handling and fallback logic.
+ * Chef.ai Standalone Mock Client
+ * All external network API/fetch requests have been removed/bypassed.
+ * Backed by mockData.js for seamless client-side execution.
  */
-async function fetchApi(endpoint, options = {}) {
-  try {
-    const res = await fetch(`${API_BASE_URL}${endpoint}`, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-      ...options,
-    });
 
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(errorData.error || `HTTP error! status: ${res.status}`);
-    }
-
-    return await res.json();
-  } catch (err) {
-    console.warn(`[API Client] Error on ${endpoint}:`, err.message);
-    throw err;
-  }
-}
-
-/**
- * Helper to convert a File object to base64 string
- */
-export function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = (error) => reject(error);
-    reader.readAsDataURL(file);
-  });
-}
+import { mockRecipes, mockPantryItems, mockSubstitutions } from '../mockData';
 
 export const api = {
-  // Check Backend Health & Mode
+  // Standalone Health Status
   async checkHealth() {
-    try {
-      const res = await fetchApi('/health');
-      return res;
-    } catch {
-      return { status: 'offline', mode: 'mock-offline', service: 'Chef.ai Standalone' };
-    }
+    return {
+      status: 'ok',
+      mode: 'standalone',
+      service: 'Chef.ai Standalone Client'
+    };
   },
 
-  // Scan Pantry (Image or general pantry sync)
-  async scanPantry(payload = {}) {
-    try {
-      const res = await fetchApi('/pantry/scan', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      });
-
-      const data = res.data || {};
-      return {
-        success: true,
-        source: data.source || 'backend',
-        items: data.items || [],
-        detectedIngredients: data.detectedIngredients || (data.items ? data.items.map(i => i.name) : []),
-        totalCount: data.totalCount || (data.items ? data.items.length : 0),
-        expiringSoonCount: data.expiringSoonCount || 0
-      };
-    } catch (err) {
-      console.warn('API scanPantry fallback triggered:', err.message);
-      return {
-        success: true,
-        source: 'fallback',
-        items: [
-          { id: 'ing_1', name: 'Eggs', quantity: '6 large', category: 'Dairy & Eggs', freshness: 'fresh', daysLeft: 7 },
-          { id: 'ing_2', name: 'Tomatoes', quantity: '4 medium', category: 'Produce', freshness: 'fresh', daysLeft: 4 },
-          { id: 'ing_3', name: 'Garlic', quantity: '1 whole head', category: 'Produce', freshness: 'shelf_stable', daysLeft: 20 },
-          { id: 'ing_4', name: 'Olive Oil', quantity: '500ml', category: 'Spices & Oils', freshness: 'shelf_stable', daysLeft: 180 },
-          { id: 'ing_5', name: 'Parmesan Cheese', quantity: '150g block', category: 'Dairy & Eggs', freshness: 'fresh', daysLeft: 14 }
-        ],
-        detectedIngredients: ['Eggs', 'Tomatoes', 'Garlic', 'Olive Oil', 'Parmesan'],
-        totalCount: 5,
-        expiringSoonCount: 1
-      };
-    }
+  // Get Pantry Inventory
+  async scanPantry() {
+    return {
+      success: true,
+      source: 'mock',
+      items: [...mockPantryItems],
+      detectedIngredients: mockPantryItems.map((i) => i.name),
+      totalCount: mockPantryItems.length,
+      expiringSoonCount: mockPantryItems.filter((i) => i.freshness === 'expiring_soon' || i.daysLeft <= 2).length
+    };
   },
 
-  // Scan Pantry from File Upload / Camera
+  // Simulated Camera / Image Scan
   async scanPantryWithImage(file) {
-    const base64Data = await fileToBase64(file);
-    return await this.scanPantry({
-      imageBase64: base64Data,
-      mimeType: file.type || 'image/jpeg'
+    // Simulated instant recognition of ingredients
+    return {
+      success: true,
+      source: 'mock-vision',
+      detectedIngredients: ['Avocado', 'Lemons', 'Fresh Basil'],
+      items: [
+        { id: 'ing_scan_1', name: 'Avocado', quantity: '2 pcs', category: 'Produce', freshness: 'fresh', daysLeft: 4 },
+        { id: 'ing_scan_2', name: 'Lemons', quantity: '3 pcs', category: 'Produce', freshness: 'fresh', daysLeft: 10 },
+        { id: 'ing_scan_3', name: 'Fresh Basil', quantity: '1 bunch', category: 'Produce', freshness: 'expiring_soon', daysLeft: 2 }
+      ]
+    };
+  },
+
+  // Generate / Retrieve Recipes matching ingredients & filters
+  async generateRecipes(ingredients = [], filter = 'all', sortBy = 'Best Match', searchQuery = '') {
+    const pantryLower = ingredients.map((i) => (typeof i === 'string' ? i.toLowerCase() : i.name.toLowerCase()));
+
+    // Dynamically calculate match score against active ingredients
+    const processedRecipes = mockRecipes.map((recipe) => {
+      let matchedCount = 0;
+      const missing = [];
+
+      const updatedIngredients = recipe.ingredients.map((ing) => {
+        const ingName = typeof ing === 'string' ? ing : ing.name;
+        const isMatched = pantryLower.some(
+          (p) => ingName.toLowerCase().includes(p) || p.includes(ingName.toLowerCase())
+        );
+
+        if (isMatched) {
+          matchedCount++;
+          return { ...ing, inPantry: true, isMissing: false };
+        } else {
+          missing.push(ingName);
+          return { ...ing, inPantry: false, isMissing: true };
+        }
+      });
+
+      const totalIngs = recipe.ingredients.length;
+      const matchPct = Math.round((matchedCount / totalIngs) * 100);
+
+      return {
+        ...recipe,
+        ingredients: updatedIngredients,
+        pantryMatchPercentage: matchPct,
+        missingIngredients: missing,
+        isAllAvailable: missing.length === 0
+      };
     });
+
+    // Apply Filter Pill
+    let filtered = processedRecipes;
+    if (filter && filter !== 'all' && filter !== 'All') {
+      filtered = filtered.filter((r) =>
+        r.tags?.some((t) => t.toLowerCase().includes(filter.toLowerCase()))
+      );
+    }
+
+    // Apply Search Query
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (r) =>
+          r.title.toLowerCase().includes(q) ||
+          r.cuisine.toLowerCase().includes(q) ||
+          r.ingredients.some((ing) => (ing.name || ing).toLowerCase().includes(q))
+      );
+    }
+
+    // Apply Sort By
+    if (sortBy === 'Fastest' || sortBy === 'fastest') {
+      filtered.sort((a, b) => a.totalTimeMinutes - b.totalTimeMinutes);
+    } else if (sortBy === 'Lowest Calories' || sortBy === 'low-cal') {
+      filtered.sort((a, b) => a.calories - b.calories);
+    } else {
+      // Default: Best Match
+      filtered.sort((a, b) => b.pantryMatchPercentage - a.pantryMatchPercentage);
+    }
+
+    return {
+      success: true,
+      source: 'mock',
+      recipes: filtered
+    };
   },
 
-  // Generate Recipes based on ingredients, filters, and search query
-  async generateRecipes(ingredients = [], filter = 'All', sortBy = 'Best Match', searchQuery = '') {
-    try {
-      const res = await fetchApi('/recipes/generate', {
-        method: 'POST',
-        body: JSON.stringify({ ingredients, filter, sortBy, searchQuery }),
-      });
+  // Get AI Substitute from Mock Substitutions Database
+  async getSubstitute(ingredient) {
+    const matchedKey = Object.keys(mockSubstitutions).find(
+      (k) => k.toLowerCase().includes(ingredient.toLowerCase()) || ingredient.toLowerCase().includes(k.toLowerCase())
+    );
 
-      const data = res.data || {};
-      return {
-        success: true,
-        source: data.source || 'backend',
-        recipes: data.recipes || []
-      };
-    } catch (err) {
-      console.warn('API generateRecipes fallback triggered:', err.message);
-      return {
-        success: true,
-        source: 'fallback',
-        recipes: []
-      };
-    }
-  },
+    const alternatives = matchedKey ? mockSubstitutions[matchedKey] : [
+      {
+        name: 'Olive Oil + Lemon Juice',
+        ratio: '1:1 ratio substitute',
+        bestFor: 'General seasoning & moisture balance',
+        notes: 'Versatile pantry swap maintaining healthy fats and bright acidity.'
+      }
+    ];
 
-  // Get AI Substitute for an ingredient
-  async getSubstitute(ingredient, recipeContext = '') {
-    try {
-      const res = await fetchApi('/recipes/substitute', {
-        method: 'POST',
-        body: JSON.stringify({ ingredient, recipeContext }),
-      });
+    const primary = alternatives[0];
 
-      const data = res.data || {};
-      const alternatives = data.alternatives || [];
-      const primary = alternatives[0] || {};
-
-      return {
-        success: true,
-        target: data.target || ingredient,
-        alternatives: alternatives,
-        substitute: primary.name || 'Greek Yogurt + Milk',
-        ratio: primary.ratio || '1:1 ratio',
-        culinaryTip: primary.notes || 'Smart AI swap maintains rich mouthfeel and texture.'
-      };
-    } catch (err) {
-      console.warn('API getSubstitute fallback triggered:', err.message);
-      return {
-        success: true,
-        target: ingredient,
-        alternatives: [
-          {
-            name: 'Greek Yogurt + Milk',
-            ratio: '1:1 ratio (3/4 cup Greek Yogurt + 1/4 cup Milk)',
-            bestFor: 'Savory sauces, creamy pasta',
-            notes: 'Whisk 3/4 cup Greek yogurt with 1/4 cup milk to match heavy cream viscosity without adding excess fat.'
-          }
-        ],
-        substitute: 'Greek Yogurt + Milk',
-        ratio: '1:1 ratio',
-        culinaryTip: 'Whisk 3/4 cup Greek yogurt with 1/4 cup milk to match heavy cream viscosity without adding excess fat.'
-      };
-    }
+    return {
+      success: true,
+      target: ingredient,
+      alternatives: alternatives,
+      substitute: primary.name,
+      ratio: primary.ratio,
+      culinaryTip: primary.notes
+    };
   }
 };
