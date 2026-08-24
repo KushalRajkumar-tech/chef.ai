@@ -1,0 +1,426 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ========================================================================= */
+/* 1. GLOBAL THEME VARIABLES                                                 */
+/* ========================================================================= */
+
+/* DEFAULT: DARK CULINARY MODE */
+:root,
+:root.dark,
+[data-theme="dark"],
+.dark {
+  /* Global Backgrounds */
+  --bg-primary: #131313;
+  --bg-app: #131313;
+  --bg-surface: #131313;
+  --bg-card: #1E1E1E;
+  --bg-surface-card: #1E1E1E;
+  --bg-surface-low: #1c1b1b;
+  --bg-surface-container: #222222;
+  --bg-surface-high: #2d2d2d;
+  --bg-surface-highest: #383838;
+  --bg-surface-lowest: #0e0e0e;
+  --bg-input: #181818;
+  
+  /* Global Typography & Text Colors */
+  --text-primary: #f5f2ed;
+  --text-secondary: #c7bba8;
+  --text-on-surface: #f5f2ed;
+  --text-on-surface-variant: #c7bba8;
+  --text-muted: #857f75;
+  
+  /* PERSISTENT WHITE / INVERSE TEXT (ALWAYS READABLE ON DARK/ACCENT) */
+  --text-on-dark: #ffffff;
+  --text-inverse: #ffffff;
+  --text-on-primary: #131313;
+  --text-on-primary-container: #1b1200;
+  
+  /* Amber / Golden Accents */
+  --color-primary: #ffe2ab;
+  --color-primary-container: #ffbf00;
+  --color-primary-fixed: #ffdfa0;
+  --color-primary-fixed-dim: #fbbc00;
+  
+  /* DYNAMIC ICON ACCENT VARIABLE (Yellow/Gold in Dark Mode) */
+  --icon-accent: #ffbf00;
+  --icon-accent-active: #ffffff;
+  --icon-accent-secondary: #ffe2ab;
+  
+  /* Secondary / Border Tones */
+  --color-secondary: #c8c8b0;
+  --color-secondary-container: #494a38;
+  --border-subtle: rgba(255, 255, 255, 0.09);
+  --border-card: rgba(255, 255, 255, 0.08);
+  --border-input: rgba(255, 255, 255, 0.13);
+  --border-focus: #ffbf00;
+  
+  /* Themed Badges & Status Pills */
+  --badge-ready-bg: rgba(74, 222, 128, 0.15);
+  --badge-ready-text: #4ade80;
+  --badge-ready-border: rgba(74, 222, 128, 0.3);
+  
+  --badge-missing-bg: rgba(255, 180, 171, 0.15);
+  --badge-missing-text: #ffb4ab;
+  --badge-missing-border: rgba(255, 180, 171, 0.3);
+
+  --badge-alert-bg: rgba(255, 180, 171, 0.2);
+  --badge-alert-text: #ffb4ab;
+
+  --badge-tag-bg: rgba(255, 191, 0, 0.12);
+  --badge-tag-text: #ffe2ab;
+  --badge-tag-border: rgba(255, 191, 0, 0.25);
+  
+  /* Shadows & Glow */
+  --shadow-card: 0 10px 30px -5px rgba(0, 0, 0, 0.5), 0 4px 10px -2px rgba(0, 0, 0, 0.3);
+  --shadow-glow: 0 0 20px rgba(255, 191, 0, 0.3);
+  --laser-color: #ffbf00;
+  
+  color-scheme: dark;
+}
+
+/* COMPLEMENTARY LIGHT MODE */
+:root[data-theme="light"],
+[data-theme="light"],
+html.light,
+body.light,
+.light,
+.light-mode {
+  /* Global Backgrounds - Crisp Linen & Soft Warm White */
+  --bg-primary: #f8f6f0;
+  --bg-app: #f8f6f0;
+  --bg-surface: #f2ede2;
+  --bg-card: #ffffff;
+  --bg-surface-card: #ffffff;
+  --bg-surface-low: #f0ebe0;
+  --bg-surface-container: #e6dfd1;
+  --bg-surface-high: #ded4c1;
+  --bg-surface-highest: #d4c7b0;
+  --bg-surface-lowest: #ffffff;
+  --bg-input: #ffffff;
+  
+  /* Global Typography & Text Colors - Deep Charcoal / Espresso for Max Readability */
+  --text-primary: #191612;
+  --text-secondary: #595044;
+  --text-on-surface: #191612;
+  --text-on-surface-variant: #595044;
+  --text-muted: #807667;
+  
+  /* PERSISTENT WHITE / INVERSE TEXT (ALWAYS READABLE ON DARK/ACCENT) */
+  --text-on-dark: #ffffff;
+  --text-inverse: #ffffff;
+  --text-on-primary: #ffffff;
+  --text-on-primary-container: #ffffff;
+  
+  /* Honey Amber Accents */
+  --color-primary: #b45309;
+  --color-primary-container: #d97706;
+  --color-primary-fixed: #f59e0b;
+  --color-primary-fixed-dim: #b45309;
+  
+  /* DYNAMIC ICON ACCENT VARIABLE (High-Contrast Deep Burnt Rust/Amber in Light Mode) */
+  --icon-accent: #c2410c;
+  --icon-accent-active: #ffffff;
+  --icon-accent-secondary: #9a3412;
+  
+  /* Secondary / Border Tones */
+  --color-secondary: #635e52;
+  --color-secondary-container: #e6dfd1;
+  --border-subtle: rgba(70, 50, 25, 0.14);
+  --border-card: rgba(70, 50, 25, 0.1);
+  --border-input: rgba(70, 50, 25, 0.18);
+  --border-focus: #d97706;
+  
+  /* Themed Badges & Status Pills in Light Mode - High Contrast Pastels with Bold Readable Text */
+  --badge-ready-bg: #dcfce7;
+  --badge-ready-text: #166534;
+  --badge-ready-border: #86efac;
+  
+  --badge-missing-bg: #fee2e2;
+  --badge-missing-text: #991b1b;
+  --badge-missing-border: #fca5a5;
+
+  --badge-alert-bg: #fee2e2;
+  --badge-alert-text: #991b1b;
+
+  --badge-tag-bg: #fef3c7;
+  --badge-tag-text: #92400e;
+  --badge-tag-border: #fde68a;
+  
+  /* Shadows & Glow */
+  --shadow-card: 0 8px 24px -4px rgba(60, 45, 20, 0.07), 0 2px 6px -1px rgba(60, 45, 20, 0.04);
+  --shadow-glow: 0 0 16px rgba(217, 119, 6, 0.25);
+  --laser-color: #d97706;
+  
+  color-scheme: light;
+}
+
+/* ========================================================================= */
+/* 2. APPLY DIRECTLY TO HTML, BODY, & APP ROOT WRAPPER                       */
+/* ========================================================================= */
+html {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+body {
+  -webkit-tap-highlight-color: transparent;
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  min-height: 100vh;
+}
+
+#root,
+.app-root,
+.app-wrapper {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  min-height: 100vh;
+}
+
+/* ========================================================================= */
+/* 3. CARD CONTRAST & TYPOGRAPHY                                             */
+/* ========================================================================= */
+.card-panel,
+article,
+.recipe-card {
+  background-color: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-card) !important;
+  box-shadow: var(--shadow-card);
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.25s ease;
+}
+
+/* Headings inside cards/sections */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
+}
+
+/* Dynamic text utility classes */
+.text-on-surface {
+  color: var(--text-primary);
+}
+
+.text-on-surface-variant {
+  color: var(--text-secondary);
+}
+
+/* Persistent contrast text utilities */
+.text-on-dark,
+.text-inverse {
+  color: var(--text-on-dark) !important;
+}
+
+/* Dynamic Icon Utility Classes */
+.text-icon-accent,
+.icon-accent,
+.category-icon,
+.pill-btn-inactive .material-symbols-outlined,
+.pill-btn-inactive svg,
+.stat-pill .material-symbols-outlined,
+.stat-pill svg {
+  color: var(--icon-accent) !important;
+  fill: var(--icon-accent);
+  stroke: var(--icon-accent);
+}
+
+.pill-btn-active .material-symbols-outlined,
+.pill-btn-active svg {
+  color: var(--icon-accent-active) !important;
+  fill: var(--icon-accent-active);
+}
+
+/* Primary Filled Buttons & Active Pills */
+.bg-primary-container,
+button.bg-primary-container {
+  background-color: var(--color-primary-container) !important;
+  color: var(--text-on-primary-container) !important;
+}
+
+.bg-primary-container *,
+button.bg-primary-container * {
+  color: var(--text-on-primary-container) !important;
+}
+
+/* Badges with dynamic theme coloring */
+.badge-ready {
+  background-color: var(--badge-ready-bg) !important;
+  color: var(--badge-ready-text) !important;
+  border-color: var(--badge-ready-border) !important;
+}
+
+.badge-missing {
+  background-color: var(--badge-missing-bg) !important;
+  color: var(--badge-missing-text) !important;
+  border-color: var(--badge-missing-border) !important;
+}
+
+.badge-alert {
+  background-color: var(--badge-alert-bg) !important;
+  color: var(--badge-alert-text) !important;
+}
+
+.badge-tag {
+  background-color: var(--badge-tag-bg) !important;
+  color: var(--badge-tag-text) !important;
+  border-color: var(--badge-tag-border) !important;
+}
+
+/* Pill / Category buttons */
+.pill-btn-inactive {
+  background-color: var(--bg-surface-container) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-subtle) !important;
+}
+.pill-btn-inactive:hover {
+  background-color: var(--bg-surface-high) !important;
+  border-color: var(--border-focus) !important;
+}
+
+.pill-btn-active {
+  background-color: var(--color-primary-container) !important;
+  color: var(--text-on-primary-container) !important;
+  border: 1px solid var(--color-primary-container) !important;
+  box-shadow: var(--shadow-glow);
+}
+.pill-btn-active * {
+  color: var(--text-on-primary-container) !important;
+}
+
+/* Stat badges inside cards (schedule, calories, protein) */
+.stat-pill {
+  background-color: var(--bg-surface-container) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-subtle) !important;
+}
+
+/* ========================================================================= */
+/* FLOATING IMAGE BADGES & BUTTONS (OVER FOOD PHOTOS)                        */
+/* ========================================================================= */
+.image-match-badge {
+  background-color: rgba(18, 18, 18, 0.85) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45) !important;
+}
+
+.image-match-badge span,
+.image-match-badge strong,
+.image-match-badge * {
+  color: #ffffff !important;
+}
+
+.image-match-badge .match-icon {
+  color: #ffbf00 !important;
+}
+
+.image-overlay-btn {
+  background-color: rgba(18, 18, 18, 0.8) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4) !important;
+  transition: all 0.2s ease;
+}
+
+.image-overlay-btn:hover {
+  background-color: rgba(18, 18, 18, 0.95) !important;
+  border-color: rgba(255, 191, 0, 0.5) !important;
+  transform: scale(1.05);
+}
+
+.image-overlay-btn span {
+  color: #ffbf00 !important;
+}
+
+/* Input Fields & Textareas */
+input,
+textarea,
+select {
+  background-color: var(--bg-input) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-input) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted) !important;
+}
+
+@layer utilities {
+  .glass-panel {
+    background: var(--bg-surface);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border-subtle);
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* ========================================================================= */
+/* 4. LASER SCANNING ANIMATION KEYFRAMES                                     */
+/* ========================================================================= */
+@keyframes laserSweep {
+  0% {
+    top: 6%;
+    opacity: 0.9;
+  }
+  50% {
+    top: 90%;
+    opacity: 1;
+  }
+  100% {
+    top: 6%;
+    opacity: 0.9;
+  }
+}
+
+.scan-laser-line {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--laser-color), transparent);
+  box-shadow: 0 0 16px var(--laser-color), 0 0 8px var(--laser-color);
+  animation: laserSweep 1.5s ease-in-out infinite alternate;
+  z-index: 20;
+}
+
+@keyframes reticlePulse {
+  0%, 100% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+
+.reticle-bracket {
+  animation: reticlePulse 2s ease-in-out infinite;
+}
+
+@keyframes floatGentle {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.float-gentle {
+  animation: floatGentle 3s ease-in-out infinite;
+}
